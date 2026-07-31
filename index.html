@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Creative Solutions</title>
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shell.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="brand">
+        <div class="logo-slot" id="logoSlot" title="Click to upload your company logo">
+          <img src="assets/logo.svg" alt="" class="brand-mark" id="brandMark" />
+          <button type="button" class="logo-remove hidden" id="logoRemoveBtn" title="Remove logo">×</button>
+          <input type="file" id="logoInput" accept="image/*" class="visually-hidden" />
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">Creative Solutions</div>
+          <div class="brand-sub">Internal Tools</div>
+        </div>
+      </div>
+      <button class="collapse-btn" id="collapseBtn" title="Collapse sidebar" aria-label="Collapse sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+
+    <nav class="nav-list" id="navList">
+      <button class="nav-item" data-tool="dashboard" title="KPI Dashboard">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </span>
+        <span class="nav-label">KPI Dashboard</span>
+      </button>
+      <button class="nav-item" data-tool="newsletter" title="Newsletter Builder">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
+        </span>
+        <span class="nav-label">Newsletter Builder</span>
+      </button>
+      <button class="nav-item" data-tool="contentcheck" title="Content Check">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 12.5"/></svg>
+        </span>
+        <span class="nav-label">Content Check</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="offline-note">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="16" r="1"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Runs entirely in your browser</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── CONTENT ── -->
+  <main class="content">
+    <div class="content-loading" id="contentLoading">Loading…</div>
+    <iframe class="tool-frame" id="toolFrame" title="Tool content"></iframe>
+  </main>
+
+</div>
+
+<script src="js/shell.js"></script>
+</body>
+</html>
