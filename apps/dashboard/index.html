@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Creative Solutions — KPI &amp; Utilization Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Poppins:wght@500;600;700&family=Montserrat:wght@500;600;700&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&family=Roboto:wght@400;500;600&family=Lato:wght@400;600;700&family=Open+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="lib/xlsx.full.min.js"></script>
+<script src="lib/chart.umd.js"></script>
+<script src="lib/pptxgen.bundle.js"></script>
+<style>
+  :root{
+    --font-header: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --bg: #0A0E13;
+    --panel: #121821;
+    --banner: #171F2A;
+    --line: #232E3B;
+    --text: #E7ECF2;
+    --muted: #8592A6;
+    --faint: #57677B;
+    --cyan: #4FD1C5;    --cyan-rgb: 79,209,197;
+    --amber: #F2A93B;   --amber-rgb: 242,169,59;
+    --coral: #EF6461;   --coral-rgb: 239,100,97;
+    --track: #202A36;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1100px 500px at 15% -10%, rgba(var(--cyan-rgb),0.07), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(var(--amber-rgb),0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  ::selection{background:rgba(var(--cyan-rgb),0.14);}
+  :focus-visible{outline:2px solid var(--cyan); outline-offset:2px;}
+
+  header.topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:24px;
+    padding:20px 32px; border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+    position:sticky; top:0; background:var(--banner);
+    z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .mark{
+    width:34px;height:34px;border-radius:9px;
+    background:conic-gradient(from -45deg, var(--cyan), var(--amber), var(--cyan));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.08) inset;
+    flex:none;
+  }
+  .brand .mark span{ width:16px;height:16px;border-radius:5px;background:var(--bg); }
+  .brand h1{font-size:17px;margin:0;font-weight:600;letter-spacing:0.2px; font-family:var(--font-header);}
+  .brand p{margin:0;font-size:12px;color:var(--muted);}
+
+  .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  select, .file-btn{
+    background:var(--banner); color:var(--text); border:1px solid var(--line);
+    border-radius:9px; padding:9px 14px; font-size:13px; font-family:inherit;
+    cursor:pointer;
+  }
+  .file-btn{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--cyan); color:#06201D; font-weight:600; border:none;
+    transition:filter .15s ease, transform .15s ease;
+  }
+  .file-btn:hover{filter:brightness(1.08); transform:translateY(-1px);}
+  .file-btn input{display:none;}
+  .ppt-btn{ background:var(--amber); color:#2B1B03; }
+  .ppt-btn:disabled{ background:var(--banner); color:var(--faint); cursor:not-allowed; transform:none; filter:none; border:1px solid var(--line); }
+  .file-name{font-size:12px;color:var(--muted);}
+
+  /* design panel */
+  .design-toggle{
+    display:inline-flex; align-items:center; gap:7px;
+    background:var(--banner); color:var(--text); border:1px solid var(--line);
+    border-radius:9px; padding:9px 14px; font-size:13px; font-family:inherit; cursor:pointer;
+  }
+  .design-toggle:hover{ filter:brightness(1.15); }
+  .design-toggle svg{ transition:transform .2s ease; }
+  .design-toggle.open svg{ transform:rotate(180deg); }
+  .design-panel{
+    max-height:0; overflow:hidden; border-bottom:1px solid transparent;
+    background:var(--banner); transition:max-height .28s ease;
+  }
+  .design-panel.open{ max-height:520px; border-bottom:1px solid var(--line); }
+  .design-inner{ padding:20px 32px 24px; }
+  .design-inner h4{ margin:0 0 4px; font-family:var(--font-header); font-size:14px; font-weight:600; }
+  .design-inner .hint{ margin:0 0 16px; font-size:11.5px; color:var(--muted); }
+  .design-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:14px 20px; }
+  .design-field label{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.3px; color:var(--muted); margin-bottom:6px; }
+  .design-field select{ width:100%; }
+  .swatch-row{ display:flex; align-items:center; gap:10px; }
+  .swatch-row input[type=color]{
+    width:38px; height:34px; padding:0; border:1px solid var(--line); border-radius:8px; background:none; cursor:pointer;
+  }
+  .swatch-row span{ font-size:12px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+  .design-actions{ margin-top:18px; display:flex; gap:10px; }
+  .reset-btn{
+    background:transparent; color:var(--muted); border:1px solid var(--line); border-radius:9px;
+    padding:8px 14px; font-size:12.5px; cursor:pointer; font-family:inherit;
+  }
+  .reset-btn:hover{ color:var(--text); border-color:var(--muted); }
+
+  /* filter bar */
+  .filterbar{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:16px 32px; border-bottom:1px solid var(--line);
+    background:var(--banner);
+  }
+  .filterbar .group{display:flex; align-items:center; gap:8px;}
+  .filterbar label{font-size:11px; text-transform:uppercase; letter-spacing:0.3px; color:var(--muted);}
+  .pill-toggle{display:flex; background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:3px; gap:2px;}
+  .pill-toggle button{
+    border:none; background:transparent; color:var(--muted); font-size:12.5px; font-weight:600;
+    padding:6px 14px; border-radius:7px; cursor:pointer; font-family:inherit;
+  }
+  .pill-toggle button.active{background:var(--cyan); color:#06201D;}
+  select#buSelect, select#leadSelect{min-width:180px;}
+  select#periodSelect{min-width:140px;}
+
+  main{padding:28px 32px 60px; max-width:1440px; margin:0 auto;}
+
+  .empty-state{ margin-top:12vh; text-align:center; color:var(--muted); }
+  .empty-state h2{color:var(--text); font-family:var(--font-header); font-size:22px; margin-bottom:8px;}
+  .empty-state p{font-size:14px; max-width:480px; margin:0 auto 22px;}
+  .empty-state .file-btn{font-size:14px; padding:12px 20px; margin:0 auto; width:max-content;}
+
+  #app{display:none;}
+  #app.ready{display:block;}
+
+  .scope-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-bottom:18px; padding:10px 16px; border-radius:10px;
+    background:var(--banner); border:1px solid var(--line); font-size:12.5px; color:var(--muted); flex-wrap:wrap;
+  }
+  .scope-banner b{color:var(--text);}
+  .chip-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .filter-chip{
+    display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600;
+    background:rgba(var(--cyan-rgb),0.14); color:var(--cyan); border-radius:20px; padding:4px 6px 4px 10px;
+  }
+  .filter-chip button{
+    background:rgba(255,255,255,0.15); border:none; color:inherit; border-radius:50%;
+    width:16px; height:16px; font-size:11px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+
+  .kpi-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:18px; margin-bottom:22px; }
+
+  .kpi-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px 18px 14px; display:flex; flex-direction:column; align-items:center; gap:6px;
+    min-width:0;
+  }
+  .kpi-label{font-size:12px; color:var(--muted); letter-spacing:0.3px; text-transform:uppercase; align-self:flex-start;}
+  .gauge-wrap{position:relative; width:150px; height:78px; margin-top:4px; overflow:hidden;}
+  .gauge-ring{ position:absolute; top:0; left:0; width:150px; height:150px; border-radius:50%; }
+  .gauge-hole{ position:absolute; width:104px; height:104px; border-radius:50%; background:var(--panel); left:50%; top:0; transform:translateX(-50%); }
+  .gauge-readout{ position:absolute; bottom:2px; left:0; right:0; text-align:center; }
+  .gauge-readout .num{font-size:22px; font-weight:600;}
+  .gauge-readout .sub{font-size:10px; color:var(--muted); margin-top:-2px;}
+  .kpi-foot{font-size:11.5px; color:var(--faint); text-align:center; overflow-wrap:break-word; word-break:break-word; max-width:100%;}
+  .kpi-foot b{color:var(--muted); font-weight:600;}
+
+  .stat-card{ align-items:flex-start !important; }
+  .stat-num{ font-size:32px; font-weight:600; font-family:'IBM Plex Mono',monospace; margin-top:10px; }
+  .stat-delta{ font-size:11.5px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:4px; margin-top:2px; flex-wrap:wrap; max-width:100%; }
+  .stat-delta.up{ color:var(--cyan); }
+  .stat-delta.down{ color:var(--coral); }
+  .stat-delta.flat{ color:var(--muted); }
+
+  .grid-2{display:grid; grid-template-columns:1.3fr 1fr; gap:18px; margin-bottom:18px;}
+  .grid-4{display:grid; grid-template-columns:repeat(2,1fr); gap:18px; margin-bottom:18px;}
+  @media (max-width:900px){ .grid-2{grid-template-columns:1fr;} .grid-4{grid-template-columns:1fr;} }
+
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 20px 12px; }
+  .panel-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+  .panel-head h3{margin:0; font-family:var(--font-header); font-size:14.5px; font-weight:600;}
+  .panel-head span.tag{font-size:11px; color:var(--muted);}
+  .chart-box{position:relative; width:100%;}
+  .scroll-y{max-height:340px; overflow-y:auto;}
+
+  .roster{width:100%; border-collapse:collapse; font-size:13px;}
+  .roster th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.3px;
+    color:var(--muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--line);
+    position:sticky; top:0; background:var(--panel); cursor:default;
+  }
+  .roster th.sortable{ cursor:pointer; user-select:none; }
+  .roster th.sortable:hover{ color:var(--text); }
+  .roster th.sortable .arrow{ opacity:0.5; margin-left:3px; }
+  .roster td{padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  .roster tr:last-child td{border-bottom:none;}
+  .roster .bar-track{background:var(--track); border-radius:6px; height:7px; width:100%; overflow:hidden;}
+  .roster .bar-fill{height:100%; border-radius:6px;}
+  .roster .bu-chip{font-size:10.5px; color:var(--muted); background:var(--banner); border:1px solid var(--line); border-radius:20px; padding:2px 8px;}
+  .pill{display:inline-block; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600;}
+  .pill.ok{background:rgba(var(--cyan-rgb),0.14); color:var(--cyan);}
+  .pill.warn{background:rgba(var(--amber-rgb),0.14); color:var(--amber);}
+  .pill.risk{background:rgba(var(--coral-rgb),0.14); color:var(--coral);}
+
+  .bd-list{display:flex; flex-direction:column; gap:10px;}
+  .bd-row{cursor:pointer; border-radius:8px; padding:6px 8px; margin:0 -8px; transition:background .12s ease;}
+  .bd-row:hover{background:var(--banner);}
+  .bd-row.active{background:rgba(var(--cyan-rgb),0.12);}
+  .bd-top{display:flex; align-items:center; justify-content:space-between; font-size:12.5px; margin-bottom:5px;}
+  .bd-top .name{font-weight:600;}
+  .bd-top .val{color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:11.5px;}
+  .bd-track{background:var(--track); border-radius:6px; height:8px; overflow:hidden;}
+  .bd-fill{height:100%; border-radius:6px;}
+
+  footer{padding:20px 32px 40px; text-align:center; color:var(--faint); font-size:11.5px;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div>
+      <h1>Creative Solutions</h1>
+      <p>KPI &amp; utilization dashboard</p>
+    </div>
+  </div>
+  <div class="controls">
+    <span class="file-name mono" id="fileName">no workbook loaded</span>
+    <button class="design-toggle" id="designToggle" type="button">
+      <span>🎨 Design</span>
+      <svg width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M1 1L5.5 6L10 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="file-btn ppt-btn" id="pptBtn" disabled title="Load a workbook first">
+      <span id="pptBtnLabel">Build PowerPoint</span>
+    </button>
+    <label class="file-btn">
+      <span>Load workbook</span>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" />
+    </label>
+  </div>
+</header>
+
+<div class="design-panel" id="designPanel">
+  <div class="design-inner">
+    <h4>Design settings</h4>
+    <p class="hint">Live preview across the whole dashboard. Changes apply instantly but aren't saved — re-apply after reloading the page.</p>
+    <div class="design-grid">
+      <div class="design-field">
+        <label>Header font</label>
+        <select id="fontHeaderSelect">
+          <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
+          <option value="'Poppins', sans-serif">Poppins</option>
+          <option value="'Montserrat', sans-serif">Montserrat</option>
+          <option value="'Playfair Display', serif">Playfair Display</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Arial, sans-serif">Arial</option>
+        </select>
+      </div>
+      <div class="design-field">
+        <label>Body font</label>
+        <select id="fontBodySelect">
+          <option value="'Inter', sans-serif">Inter</option>
+          <option value="'Roboto', sans-serif">Roboto</option>
+          <option value="'Lato', sans-serif">Lato</option>
+          <option value="'Open Sans', sans-serif">Open Sans</option>
+          <option value="Arial, sans-serif">Arial</option>
+        </select>
+      </div>
+      <div class="design-field">
+        <label>Font color</label>
+        <div class="swatch-row"><input type="color" id="colorText"><span id="colorTextVal"></span></div>
+      </div>
+      <div class="design-field">
+        <label>Background</label>
+        <div class="swatch-row"><input type="color" id="colorBg"><span id="colorBgVal"></span></div>
+      </div>
+      <div class="design-field">
+        <label>Panel background</label>
+        <div class="swatch-row"><input type="color" id="colorPanel"><span id="colorPanelVal"></span></div>
+      </div>
+      <div class="design-field">
+        <label>Section banner background</label>
+        <div class="swatch-row"><input type="color" id="colorBanner"><span id="colorBannerVal"></span></div>
+      </div>
+      <div class="design-field">
+        <label>Accent — good / on target</label>
+        <div class="swatch-row"><input type="color" id="colorCyan"><span id="colorCyanVal"></span></div>
+      </div>
+      <div class="design-field">
+        <label>Accent — warning</label>
+        <div class="swatch-row"><input type="color" id="colorAmber"><span id="colorAmberVal"></span></div>
+      </div>
+      <div class="design-field">
+        <label>Accent — risk / critical</label>
+        <div class="swatch-row"><input type="color" id="colorCoral"><span id="colorCoralVal"></span></div>
+      </div>
+    </div>
+    <div class="design-actions">
+      <button class="reset-btn" id="themeResetBtn" type="button">Reset to default</button>
+    </div>
+  </div>
+</div>
+
+<div class="filterbar" id="filterBar" style="display:none;">
+  <div class="group">
+    <label>Business unit</label>
+    <select id="buSelect"></select>
+  </div>
+  <div class="group">
+    <label>Lead</label>
+    <select id="leadSelect"></select>
+  </div>
+  <div class="group">
+    <label>View by</label>
+    <div class="pill-toggle" id="modeToggle">
+      <button data-mode="month" class="active">Monthly</button>
+      <button data-mode="quarter">Quarterly</button>
+    </div>
+  </div>
+  <div class="group">
+    <label>Period</label>
+    <select id="periodSelect"></select>
+  </div>
+</div>
+
+<main>
+  <div class="empty-state" id="emptyState">
+    <h2>No data loaded yet</h2>
+    <p>Upload your PowerBI-style workbook (Dim_BU, Fact_BU_Resources, Fact_Utilization) to render the console. Nothing leaves your browser — the file is parsed locally.</p>
+    <label class="file-btn">
+      <span>Choose Excel file</span>
+      <input type="file" id="fileInput2" accept=".xlsx,.xls" />
+    </label>
+  </div>
+
+  <div id="app">
+    <div class="scope-banner">
+      <span id="scopeBannerText"></span>
+      <div class="chip-row" id="quickFilterChips"></div>
+    </div>
+
+    <section class="kpi-row" id="kpiRow"></section>
+
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h3 id="leftChartTitle">Utilization by Business Unit</h3>
+          <span class="tag" id="leftChartTag">selected period</span>
+        </div>
+        <div class="chart-box" style="height:300px;"><canvas id="leftChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3 id="rightTableTitle">Business Unit Leaderboard</h3>
+          <span class="tag" id="rightTableTag"></span>
+        </div>
+        <div class="scroll-y">
+          <table class="roster" id="rightTable">
+            <thead><tr id="rightTableHead"></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-4">
+      <div class="panel">
+        <div class="panel-head"><h3>Number of projects</h3><span class="tag" id="tagProjects">by month</span></div>
+        <div class="chart-box" style="height:220px;"><canvas id="chartProjects"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Total hours</h3><span class="tag" id="tagHours">by month</span></div>
+        <div class="chart-box" style="height:220px;"><canvas id="chartHours"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Monthly utilization %</h3><span class="tag" id="tagUtil">by month</span></div>
+        <div class="chart-box" style="height:220px;"><canvas id="chartUtil"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Cost avoidance</h3><span class="tag" id="tagCost">by month</span></div>
+        <div class="chart-box" style="height:220px;"><canvas id="chartCost"></canvas></div>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Priority breakdown</h3>
+          <span class="tag">click a slice to filter</span>
+        </div>
+        <div class="chart-box" style="height:260px;"><canvas id="chartPriority"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Project type breakdown</h3>
+          <span class="tag">click a slice to filter</span>
+        </div>
+        <div class="chart-box" style="height:260px;"><canvas id="chartProjectType"></canvas></div>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-bottom:18px;">
+      <div class="panel-head">
+        <h3>Work items in scope</h3>
+        <span class="tag" id="itemsTag"></span>
+      </div>
+      <div class="scroll-y" style="max-height:420px;">
+        <table class="roster" id="itemsTable">
+          <thead><tr id="itemsTableHead"></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>Runs entirely client-side · no data is uploaded anywhere · re-upload the workbook any time to refresh</footer>
+
+<script>
+(function(){
+  const COLORS = { cyan:'#4FD1C5', amber:'#F2A93B', coral:'#EF6461', track:'#202A36', muted:'#8592A6', text:'#E7ECF2', line:'#232E3B' };
+  let charts = {};
+  let state = null;          // parsed workbook data
+  let scopeBU = 'ALL';       // 'ALL' or a BU name
+  let scopeLead = 'ALL';     // 'ALL' or a Lead name
+  let periodMode = 'month';  // 'month' | 'quarter'
+  let periodKeySel = null;   // selected period key
+  let quickFilters = { priority:'ALL', projectType:'ALL' };
+  let itemsSort = { key:'date', dir:-1 };
+
+  // ---------- theme ----------
+  const DEFAULT_THEME = {
+    fontHeader: "'Space Grotesk', sans-serif",
+    fontBody: "'Inter', sans-serif",
+    text: '#E7ECF2',
+    bg: '#0A0E13',
+    panel: '#121821',
+    banner: '#171F2A',
+    cyan: '#4FD1C5',
+    amber: '#F2A93B',
+    coral: '#EF6461',
+  };
+  let theme = { ...DEFAULT_THEME };
+
+  function hexToRgb(hex){
+    hex = (hex||'#000000').replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+    const num = parseInt(hex, 16);
+    return [(num>>16)&255, (num>>8)&255, num&255];
+  }
+  function rgbToHex(rgb){ return '#' + rgb.map(v => clamp(Math.round(v),0,255).toString(16).padStart(2,'0')).join(''); }
+  function mixHex(hexA, hexB, weightB){
+    const a = hexToRgb(hexA), b = hexToRgb(hexB);
+    return rgbToHex(a.map((v,i) => v*(1-weightB) + b[i]*weightB));
+  }
+
+  function applyTheme(t){
+    theme = t;
+    const root = document.documentElement.style;
+    const muted = mixHex(t.text, t.bg, 0.48);
+    const faint = mixHex(t.text, t.bg, 0.64);
+    const line = mixHex(t.panel, t.text, 0.16);
+    const track = mixHex(t.panel, t.text, 0.15);
+
+    root.setProperty('--font-header', t.fontHeader);
+    root.setProperty('--font-body', t.fontBody);
+    root.setProperty('--text', t.text);
+    root.setProperty('--bg', t.bg);
+    root.setProperty('--panel', t.panel);
+    root.setProperty('--banner', t.banner);
+    root.setProperty('--muted', muted);
+    root.setProperty('--faint', faint);
+    root.setProperty('--line', line);
+    root.setProperty('--track', track);
+    root.setProperty('--cyan', t.cyan);
+    root.setProperty('--amber', t.amber);
+    root.setProperty('--coral', t.coral);
+    root.setProperty('--cyan-rgb', hexToRgb(t.cyan).join(','));
+    root.setProperty('--amber-rgb', hexToRgb(t.amber).join(','));
+    root.setProperty('--coral-rgb', hexToRgb(t.coral).join(','));
+
+    COLORS.text = t.text; COLORS.muted = muted; COLORS.line = line; COLORS.track = track;
+    COLORS.cyan = t.cyan; COLORS.amber = t.amber; COLORS.coral = t.coral;
+
+    if (state) renderAll();
+  }
+
+  function syncDesignInputs(){
+    document.getElementById('fontHeaderSelect').value = theme.fontHeader;
+    document.getElementById('fontBodySelect').value = theme.fontBody;
+    const fields = [
+      ['colorText','text'], ['colorBg','bg'], ['colorPanel','panel'], ['colorBanner','banner'],
+      ['colorCyan','cyan'], ['colorAmber','amber'], ['colorCoral','coral'],
+    ];
+    fields.forEach(([id,key]) => {
+      document.getElementById(id).value = theme[key];
+      document.getElementById(id+'Val').textContent = theme[key].toUpperCase();
+    });
+  }
+
+  function wireDesignPanel(){
+    document.getElementById('designToggle').addEventListener('click', () => {
+      document.getElementById('designPanel').classList.toggle('open');
+      document.getElementById('designToggle').classList.toggle('open');
+    });
+    document.getElementById('fontHeaderSelect').addEventListener('change', e => applyTheme({...theme, fontHeader:e.target.value}));
+    document.getElementById('fontBodySelect').addEventListener('change', e => applyTheme({...theme, fontBody:e.target.value}));
+    const colorMap = { colorText:'text', colorBg:'bg', colorPanel:'panel', colorBanner:'banner', colorCyan:'cyan', colorAmber:'amber', colorCoral:'coral' };
+    Object.keys(colorMap).forEach(id => {
+      document.getElementById(id).addEventListener('input', e => {
+        const key = colorMap[id];
+        document.getElementById(id+'Val').textContent = e.target.value.toUpperCase();
+        applyTheme({ ...theme, [key]: e.target.value });
+      });
+    });
+    document.getElementById('themeResetBtn').addEventListener('click', () => {
+      applyTheme({ ...DEFAULT_THEME });
+      syncDesignInputs();
+    });
+  }
+
+  // ---------- generic helpers ----------
+  function num(v){ const n = Number(v); return isNaN(n) ? 0 : n; }
+  function pct(a,b){ return b > 0 ? (a/b)*100 : 0; }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function fmtPct(v){ return v==null ? '—' : (Math.round(v*10)/10).toFixed(1) + '%'; }
+  function fmtMoney(v){
+    const sign = v < 0 ? '-' : '';
+    const abs = Math.abs(v);
+    if (abs >= 1000000) return sign + '$' + (abs/1000000).toFixed(1) + 'M';
+    if (abs >= 1000) return sign + '$' + (abs/1000).toFixed(1) + 'K';
+    return sign + '$' + Math.round(abs).toLocaleString('en-US');
+  }
+  function fmtNum(v){ return Math.round(v).toLocaleString('en-US'); }
+  function toDate(v){
+    if (v instanceof Date) return v;
+    if (typeof v === 'number') return new Date(Math.round((v-25569)*86400*1000));
+    if (typeof v === 'string'){ const d = new Date(v); if(!isNaN(d)) return d; }
+    return null;
+  }
+  function quarterOf(d){ return Math.floor(d.getMonth()/3) + 1; }
+  function periodKeyOf(d, mode){
+    return mode === 'quarter' ? (d.getFullYear() + '-Q' + quarterOf(d)) : (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'));
+  }
+  function periodLabel(key, mode){
+    if (key === 'ALL') return 'Consolidated (All Periods)';
+    if (mode === 'quarter'){ const [y,q] = key.split('-Q'); return 'Q' + q + ' ' + y; }
+    const [y,m] = key.split('-'); return new Date(y, m-1, 1).toLocaleString('en-US',{month:'short'}) + ' ' + y;
+  }
+  function periodRange(key, mode){
+    if (mode === 'quarter'){
+      const [y,q] = key.split('-Q').map(Number);
+      const startMonth = (q-1)*3;
+      return { start:new Date(y, startMonth, 1), end:new Date(y, startMonth+3, 1) };
+    }
+    const [y,m] = key.split('-').map(Number);
+    return { start:new Date(y, m-1, 1), end:new Date(y, m, 1) };
+  }
+  // The period select can be a specific month/quarter, or 'ALL' (Consolidated) meaning no date filter.
+  function getSelectedRange(){
+    return (periodKeySel && periodKeySel !== 'ALL') ? periodRange(periodKeySel, periodMode) : { start:null, end:null };
+  }
+  // How many calendar months of FTE capacity to charge when there's no explicit start/end
+  // (i.e. the Consolidated view) — spans from the earliest to latest date in the whole dataset.
+  function totalCapacityMonths(){
+    if (!state || !state.factRows.length) return 0;
+    let min = state.factRows[0].date, max = state.factRows[0].date;
+    state.factRows.forEach(r => { if (r.date < min) min = r.date; if (r.date > max) max = r.date; });
+    return (max.getFullYear()-min.getFullYear())*12 + (max.getMonth()-min.getMonth()) + 1;
+  }
+  function tierColor(p){ return p==null ? COLORS.muted : p >= 85 ? COLORS.cyan : p >= 65 ? COLORS.amber : COLORS.coral; }
+
+  function renderGauge(el, pctValue, label, color){
+    const capped = clamp(pctValue==null?0:pctValue, 0, 100);
+    const angle = (capped/100)*180;
+    el.innerHTML = `
+      <div class="gauge-wrap">
+        <div class="gauge-ring" style="background:conic-gradient(from -90deg, ${color} 0deg ${angle}deg, ${COLORS.track} ${angle}deg 180deg, transparent 180deg 360deg);"></div>
+        <div class="gauge-hole"></div>
+        <div class="gauge-readout">
+          <div class="num mono" style="color:${color}">${pctValue==null?'—':Math.round(pctValue)+'%'}</div>
+          <div class="sub">${label}</div>
+        </div>
+      </div>`;
+  }
+
+  // ---------- parsing (fixed to this workbook's schema) ----------
+  function sheetToRows(wb, name, opts){
+    const ws = wb.Sheets[name];
+    if (!ws) return [];
+    return XLSX.utils.sheet_to_json(ws, Object.assign({ defval:null, raw:true }, opts||{}));
+  }
+
+  function parseWorkbook(wb){
+    const duSheet = sheetToRows(wb, 'Dim_BU').map(r => ({
+      bu: String(r['Business Unit']||'').trim(), lead: String(r['Lead']||'').trim()
+    })).filter(r => r.bu);
+    const leadMap = new Map(duSheet.map(r => [r.bu, r.lead]));
+
+    // Fact_BU_Resources has a 2-row header ("Levels" group label on row 1) — skip to row 2.
+    const resRows = sheetToRows(wb, 'Fact_BU_Resources', { range:1, defval:0 });
+    const capacityMap = new Map();
+    resRows.forEach(r => {
+      const bu = String(r['BU']||'').trim();
+      if (!bu) return;
+      const total = ['L5','L6','L7','L8','L9','L10'].reduce((a,k)=>a+num(r[k]), 0);
+      capacityMap.set(bu, total);
+    });
+
+    const workTypeCostMap = new Map(sheetToRows(wb, 'Dim_WorkType_Cost').map(r => [String(r['Work Type']||'').trim(), num(r['Cost'])]));
+
+    const factRows = sheetToRows(wb, 'Fact_Utilization').map(r => {
+      const bu = String(r['BU']||'').trim();
+      const workType = String(r['Work type']||'').trim();
+      let cost = num(r['Cost']);
+      if (!cost && workTypeCostMap.has(workType)) cost = workTypeCostMap.get(workType) || 0;
+      return {
+        date: toDate(r['Date']),
+        bu,
+        lead: leadMap.get(bu) || 'Unassigned',
+        status: String(r['Status']||'').trim() || 'Unknown',
+        priority: String(r['Priority']||'').trim() || 'Unspecified',
+        workType: workType || 'Unspecified',
+        projectType: String(r['Project type']||'').trim() || 'Unspecified',
+        assignedTo: String(r['Assigned to']||'').trim(),
+        requestor: String(r['Requestor name']||'').trim(),
+        itemId: r['Item ID']!=null ? String(r['Item ID']) : '',
+        hours: num(r['Hours']),
+        estimatedHours: num(r['Estimated Hours']),
+        cost,
+      };
+    }).filter(r => r.bu && r.date);
+
+    const buSet = new Set(duSheet.map(b=>b.bu));
+    factRows.forEach(r => buSet.add(r.bu));
+    const buList = duSheet.length
+      ? duSheet.map(b=>b.bu).concat([...buSet].filter(n=>!duSheet.some(b=>b.bu===n)))
+      : [...buSet].sort();
+    const leadList = [...new Set(duSheet.map(b=>b.lead).filter(Boolean))].sort();
+
+    return { factRows, capacityMap, leadMap, buList, leadList };
+  }
+
+  // ---------- scoping ----------
+  function scopedRowsExcluding(excludeKey){
+    let rows = state.factRows;
+    if (scopeLead !== 'ALL') rows = rows.filter(r => r.lead === scopeLead);
+    if (scopeBU !== 'ALL') rows = rows.filter(r => r.bu === scopeBU);
+    if (excludeKey !== 'priority' && quickFilters.priority !== 'ALL') rows = rows.filter(r => r.priority === quickFilters.priority);
+    if (excludeKey !== 'projectType' && quickFilters.projectType !== 'ALL') rows = rows.filter(r => r.projectType === quickFilters.projectType);
+    return rows;
+  }
+  function scopedRows(){ return scopedRowsExcluding(null); }
+
+  function buUniverse(){
+    let bus = state.buList;
+    if (scopeLead !== 'ALL') bus = bus.filter(b => (state.leadMap.get(b)||'Unassigned') === scopeLead);
+    if (scopeBU !== 'ALL') bus = bus.filter(b => b === scopeBU);
+    return bus;
+  }
+
+  // ---------- KPI computation ----------
+  function computeKPIs(rows, start, end, bus){
+    const inRange = start ? rows.filter(r => r.date >= start && r.date < end) : rows;
+    const totalHours = inRange.reduce((a,r)=>a+r.hours, 0);
+    const totalCost = inRange.reduce((a,r)=>a+r.cost, 0);
+    const projects = new Set(inRange.map(r=>r.itemId)).size;
+
+    const monthsMultiplier = start
+      ? (end.getFullYear()-start.getFullYear())*12 + (end.getMonth()-start.getMonth())
+      : totalCapacityMonths();
+    const eligibleBUs = bus.filter(b => state.capacityMap.has(b));
+    const capacityTotal = eligibleBUs.reduce((a,b)=>a+state.capacityMap.get(b), 0) * 160 * monthsMultiplier;
+    const eligibleHours = inRange.filter(r => state.capacityMap.has(r.bu)).reduce((a,r)=>a+r.hours, 0);
+    const utilization = capacityTotal > 0 ? pct(eligibleHours, capacityTotal) : null;
+
+    return { totalHours, totalCost, projects, utilization, itemCount: inRange.length };
+  }
+
+  function allPeriodKeys(mode){
+    const keys = new Set();
+    state.factRows.forEach(r => keys.add(periodKeyOf(r.date, mode)));
+    return [...keys].sort();
+  }
+
+  function computeBULeaderboard(start, end){
+    return buUniverse().map(bu => {
+      const rows = scopedRows().filter(r => r.bu === bu);
+      const k = computeKPIs(rows, start, end, [bu]);
+      return { bu, lead: state.leadMap.get(bu)||'Unassigned', ...k };
+    }).sort((a,b) => (b.utilization ?? -1) - (a.utilization ?? -1));
+  }
+
+  function computeWorkTypeBreakdown(rows, start, end){
+    const inRange = start ? rows.filter(r=>r.date>=start && r.date<end) : rows;
+    const map = new Map();
+    inRange.forEach(r => {
+      if (!map.has(r.workType)) map.set(r.workType, { workType:r.workType, hours:0, cost:0, count:0 });
+      const w = map.get(r.workType);
+      w.hours += r.hours; w.cost += r.cost; w.count += 1;
+    });
+    return [...map.values()].sort((a,b)=>b.hours-a.hours);
+  }
+
+  function groupBy(rows, key){
+    const map = new Map();
+    rows.forEach(r => {
+      const k = r[key] || 'Unspecified';
+      if (!map.has(k)) map.set(k, { key:k, hours:0, count:0 });
+      const g = map.get(k);
+      g.hours += r.hours; g.count += 1;
+    });
+    return [...map.values()].sort((a,b)=>b.hours-a.hours);
+  }
+
+  // ---------- filter bar setup ----------
+  function populateBUSelect(){
+    const sel = document.getElementById('buSelect');
+    sel.innerHTML = '';
+    const optAll = document.createElement('option');
+    optAll.value = 'ALL'; optAll.textContent = `All Business Units (${state.buList.length}) — Consolidated`;
+    sel.appendChild(optAll);
+    state.buList.forEach(bu => {
+      const opt = document.createElement('option'); opt.value = bu; opt.textContent = bu;
+      sel.appendChild(opt);
+    });
+    sel.value = scopeBU;
+    sel.onchange = () => { scopeBU = sel.value; renderAll(); };
+  }
+
+  function populateLeadSelect(){
+    const sel = document.getElementById('leadSelect');
+    sel.innerHTML = '';
+    const optAll = document.createElement('option');
+    optAll.value = 'ALL'; optAll.textContent = 'All Leads';
+    sel.appendChild(optAll);
+    state.leadList.forEach(l => {
+      const opt = document.createElement('option'); opt.value = l; opt.textContent = l;
+      sel.appendChild(opt);
+    });
+    sel.value = scopeLead;
+    sel.onchange = () => { scopeLead = sel.value; renderAll(); };
+  }
+
+  function populatePeriodSelect(){
+    const sel = document.getElementById('periodSelect');
+    const keys = allPeriodKeys(periodMode);
+    sel.innerHTML = '';
+    const optAll = document.createElement('option');
+    optAll.value = 'ALL'; optAll.textContent = 'Consolidated (All Periods)';
+    sel.appendChild(optAll);
+    keys.forEach(k => {
+      const opt = document.createElement('option'); opt.value = k; opt.textContent = periodLabel(k, periodMode);
+      sel.appendChild(opt);
+    });
+    periodKeySel = keys.length ? keys[keys.length-1] : 'ALL';
+    sel.value = periodKeySel;
+    sel.onchange = () => { periodKeySel = sel.value; renderAll(); };
+    ['tagProjects','tagHours','tagUtil','tagCost'].forEach(id => {
+      document.getElementById(id).textContent = 'by ' + (periodMode==='quarter' ? 'quarter' : 'month');
+    });
+  }
+
+  document.getElementById('modeToggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    periodMode = btn.dataset.mode;
+    [...document.getElementById('modeToggle').children].forEach(b=>b.classList.toggle('active', b===btn));
+    populatePeriodSelect();
+    renderAll();
+  });
+
+  function toggleQuickFilter(key, value){
+    quickFilters[key] = (quickFilters[key] === value) ? 'ALL' : value;
+    renderAll();
+  }
+
+  // ---------- rendering ----------
+  function renderScopeBanner(){
+    const scopeParts = [];
+    scopeParts.push(scopeBU === 'ALL' ? `<b>All ${state.buList.length} Business Units</b>` : `<b>${scopeBU}</b>`);
+    if (scopeLead !== 'ALL') scopeParts.push(`Lead: <b>${scopeLead}</b>`);
+    const periodText = periodKeySel ? periodLabel(periodKeySel, periodMode) : 'no period data';
+    const periodPhrase = periodKeySel === 'ALL' ? `view for <b>${periodText}</b>` : `${periodMode==='quarter'?'quarterly':'monthly'} view for <b>${periodText}</b>`;
+    document.getElementById('scopeBannerText').innerHTML =
+      `Showing ${scopeParts.join(' · ')} · ${periodPhrase}`;
+
+    const chipsEl = document.getElementById('quickFilterChips');
+    chipsEl.innerHTML = '';
+    [['priority','Priority'], ['projectType','Project Type']].forEach(([key,label]) => {
+      if (quickFilters[key] !== 'ALL'){
+        const chip = document.createElement('span');
+        chip.className = 'filter-chip';
+        chip.innerHTML = `${label}: ${quickFilters[key]} <button aria-label="Clear">×</button>`;
+        chip.querySelector('button').onclick = () => toggleQuickFilter(key, quickFilters[key]);
+        chipsEl.appendChild(chip);
+      }
+    });
+  }
+
+  function prevPeriodKey(){
+    if (periodKeySel === 'ALL') return null;
+    const keys = allPeriodKeys(periodMode);
+    const idx = keys.indexOf(periodKeySel);
+    return idx > 0 ? keys[idx-1] : null;
+  }
+
+  function deltaBadge(curr, prev, formatter){
+    if (prev == null || prev === 0 || curr == null) return '<span class="stat-delta flat">no prior period</span>';
+    const change = ((curr - prev) / Math.abs(prev)) * 100;
+    const dir = change > 0.5 ? 'up' : change < -0.5 ? 'down' : 'flat';
+    const arrow = dir === 'up' ? '▲' : dir === 'down' ? '▼' : '—';
+    return `<span class="stat-delta ${dir}">${arrow} ${Math.abs(Math.round(change))}% vs ${formatter}</span>`;
+  }
+
+  function renderKPIRow(kpi, prevKpi, prevLabel){
+    const el = document.getElementById('kpiRow');
+    el.innerHTML = '';
+
+    function addStatCard(label, value, curr, prev){
+      const card = document.createElement('div');
+      card.className = 'kpi-card stat-card';
+      card.innerHTML = `
+        <div class="kpi-label">${label}</div>
+        <div class="stat-num">${value}</div>
+        ${deltaBadge(curr, prev, prevLabel)}
+      `;
+      el.appendChild(card);
+    }
+
+    function addGaugeCard(){
+      const gaugeCard = document.createElement('div');
+      gaugeCard.className = 'kpi-card';
+      gaugeCard.innerHTML = `<div class="kpi-label">Utilization</div><div class="gauge-slot"></div><div class="kpi-foot" id="utilFoot"></div>`;
+      el.appendChild(gaugeCard);
+      renderGauge(gaugeCard.querySelector('.gauge-slot'), kpi.utilization, 'of capacity', tierColor(kpi.utilization));
+      document.getElementById('utilFoot').innerHTML = kpi.utilization==null
+        ? 'no FTE data for BUs in scope'
+        : deltaBadge(kpi.utilization, prevKpi ? prevKpi.utilization : null, prevLabel);
+    }
+
+    // Order: Projects, Hours, Utilization, Cost Avoidance
+    addStatCard('Projects', fmtNum(kpi.projects), kpi.projects, prevKpi?prevKpi.projects:null);
+    addStatCard('Total Hours', fmtNum(kpi.totalHours), kpi.totalHours, prevKpi?prevKpi.totalHours:null);
+    addGaugeCard();
+    addStatCard('Cost Avoidance', fmtMoney(kpi.totalCost), kpi.totalCost, prevKpi?prevKpi.totalCost:null);
+  }
+
+  function renderLeftChartAndTable(){
+    const isConsolidated = scopeBU === 'ALL';
+    const range = getSelectedRange();
+
+    document.getElementById('leftChartTitle').textContent = isConsolidated ? 'Utilization by Business Unit' : `Work Type Breakdown — ${scopeBU}`;
+    document.getElementById('rightTableTitle').textContent = isConsolidated ? 'Business Unit Leaderboard' : `Work Types — ${scopeBU}`;
+
+    const ctx = document.getElementById('leftChart');
+    if (charts.left) charts.left.destroy();
+
+    if (isConsolidated){
+      const board = computeBULeaderboard(range.start, range.end).slice(0, 15);
+      charts.left = new Chart(ctx, {
+        type:'bar',
+        data:{ labels: board.map(b=>b.bu), datasets:[{
+          data: board.map(b=>b.utilization==null?0:Math.round(b.utilization*10)/10),
+          backgroundColor: board.map(b=>tierColor(b.utilization)), borderRadius:6, maxBarThickness:18,
+        }]},
+        options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>c.parsed.x+'% utilization' } } },
+          scales:{ x:{ grid:{color:COLORS.line}, ticks:{color:COLORS.muted, callback:v=>v+'%'}, suggestedMax:110 },
+                   y:{ grid:{display:false}, ticks:{color:COLORS.text, font:{size:10.5} } } } }
+      });
+
+      const head = document.getElementById('rightTableHead');
+      head.innerHTML = '<th>Business Unit</th><th>Utilization</th><th>Projects</th><th>Hours</th><th>Cost</th>';
+      const tbody = document.querySelector('#rightTable tbody'); tbody.innerHTML = '';
+      board.forEach(b => {
+        const color = tierColor(b.utilization);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${b.bu}<div style="font-size:11px;color:var(--muted);">${b.lead}</div></td>
+          <td class="mono" style="color:${color}; font-weight:600;">${fmtPct(b.utilization)}</td>
+          <td class="mono">${fmtNum(b.projects)}</td>
+          <td class="mono">${fmtNum(b.totalHours)}</td>
+          <td class="mono">${fmtMoney(b.totalCost)}</td>`;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('rightTableTag').textContent = board.length + ' business units';
+    } else {
+      const wt = computeWorkTypeBreakdown(scopedRows(), range.start, range.end).slice(0, 15);
+      charts.left = new Chart(ctx, {
+        type:'bar',
+        data:{ labels: wt.map(w=>w.workType), datasets:[{
+          data: wt.map(w=>w.hours), backgroundColor: COLORS.cyan, borderRadius:6, maxBarThickness:18,
+        }]},
+        options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:c=>c.parsed.x+' hrs' } } },
+          scales:{ x:{ grid:{color:COLORS.line}, ticks:{color:COLORS.muted} },
+                   y:{ grid:{display:false}, ticks:{color:COLORS.text, font:{size:10.5} } } } }
+      });
+
+      const head = document.getElementById('rightTableHead');
+      head.innerHTML = '<th>Work Type</th><th>Hours</th><th>Cost</th><th>Items</th>';
+      const tbody = document.querySelector('#rightTable tbody'); tbody.innerHTML = '';
+      wt.forEach(w => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${w.workType}</td><td class="mono">${fmtNum(w.hours)}</td><td class="mono">${fmtMoney(w.cost)}</td><td class="mono">${w.count}</td>`;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('rightTableTag').textContent = wt.length + ' work types';
+    }
+  }
+
+  function getTrendSeries(){
+    const rows = scopedRows();
+    const keys = allPeriodKeys(periodMode);
+    const bus = buUniverse();
+    return keys.map(k => {
+      const r = periodRange(k, periodMode);
+      const kpi = computeKPIs(rows, r.start, r.end, bus);
+      return { key:k, label: periodLabel(k, periodMode), ...kpi };
+    });
+  }
+
+  function renderTrendCharts(){
+    const series = getTrendSeries();
+    const labels = series.map(s=>s.label);
+
+    if (charts.projects) charts.projects.destroy();
+    charts.projects = new Chart(document.getElementById('chartProjects'), {
+      type:'bar', data:{ labels, datasets:[{ data: series.map(s=>s.projects), backgroundColor:COLORS.cyan, borderRadius:6, maxBarThickness:34 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{grid:{display:false}, ticks:{color:COLORS.muted}}, y:{grid:{color:COLORS.line}, ticks:{color:COLORS.muted}} } }
+    });
+
+    if (charts.hours) charts.hours.destroy();
+    charts.hours = new Chart(document.getElementById('chartHours'), {
+      type:'bar', data:{ labels, datasets:[{ data: series.map(s=>s.totalHours), backgroundColor:COLORS.amber, borderRadius:6, maxBarThickness:34 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+        scales:{ x:{grid:{display:false}, ticks:{color:COLORS.muted}}, y:{grid:{color:COLORS.line}, ticks:{color:COLORS.muted}} } }
+    });
+
+    if (charts.util) charts.util.destroy();
+    charts.util = new Chart(document.getElementById('chartUtil'), {
+      type:'line', data:{ labels, datasets:[{
+        data: series.map(s=>s.utilization==null?null:Math.round(s.utilization*10)/10),
+        borderColor:COLORS.cyan, backgroundColor:'rgba(79,209,197,0.12)', fill:true, tension:0.35,
+        pointRadius:3, pointBackgroundColor:COLORS.cyan, borderWidth:2, spanGaps:true,
+      }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
+        tooltip:{ callbacks:{ label:c=>c.parsed.y==null?'no capacity data':c.parsed.y+'% utilization' } } },
+        scales:{ x:{grid:{display:false}, ticks:{color:COLORS.muted}}, y:{grid:{color:COLORS.line}, ticks:{color:COLORS.muted, callback:v=>v+'%'}} } }
+    });
+
+    if (charts.cost) charts.cost.destroy();
+    charts.cost = new Chart(document.getElementById('chartCost'), {
+      type:'bar', data:{ labels, datasets:[{ data: series.map(s=>s.totalCost), backgroundColor:COLORS.coral, borderRadius:6, maxBarThickness:34 }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
+        tooltip:{ callbacks:{ label:c=>fmtMoney(c.parsed.y) } } },
+        scales:{ x:{grid:{display:false}, ticks:{color:COLORS.muted}}, y:{grid:{color:COLORS.line}, ticks:{color:COLORS.muted, callback:v=>fmtMoney(v)}} } }
+    });
+  }
+
+  function categoryPalette(n){
+    const base = [COLORS.cyan, COLORS.amber, COLORS.coral];
+    const out = [];
+    for (let i = 0; i < n; i++){
+      if (i < 3) out.push(base[i]);
+      else out.push(mixHex(base[i % 3], '#FFFFFF', 0.25 * Math.floor(i / 3)));
+    }
+    return out;
+  }
+
+  function renderPieBreakdown(canvasId, chartKeyName, key){
+    const range = getSelectedRange();
+    const rows = scopedRowsExcluding(key).filter(r => range.start ? (r.date>=range.start && r.date<range.end) : true);
+    const groups = groupBy(rows, key);
+    const ctx = document.getElementById(canvasId);
+    if (charts[chartKeyName]) charts[chartKeyName].destroy();
+
+    if (!groups.length){
+      charts[chartKeyName] = null;
+      return;
+    }
+
+    const baseColors = categoryPalette(groups.length);
+    const activeVal = quickFilters[key];
+    const colors = groups.map((g,i) => (activeVal==='ALL' || activeVal===g.key) ? baseColors[i] : baseColors[i]+'40');
+
+    charts[chartKeyName] = new Chart(ctx, {
+      type:'doughnut',
+      data:{ labels: groups.map(g=>g.key), datasets:[{
+        data: groups.map(g=>g.hours), backgroundColor: colors, borderColor: COLORS.panel, borderWidth:2,
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{ position:'right', labels:{ color:COLORS.text, boxWidth:12, font:{size:11.5} } },
+          tooltip:{ callbacks:{ label:c => `${c.label}: ${fmtNum(c.parsed)} hrs (${groups[c.dataIndex].count} items)` } },
+        },
+        onClick:(evt, elements) => {
+          if (!elements.length) return;
+          const idx = elements[0].index;
+          toggleQuickFilter(key, groups[idx].key);
+        },
+        onHover:(evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
+      }
+    });
+  }
+
+  function renderItemsTable(){
+    const range = getSelectedRange();
+    let rows = scopedRows().filter(r => range.start ? (r.date>=range.start && r.date<range.end) : true);
+
+    const cols = [
+      { key:'date', label:'Date', fmt:r=>r.date.toISOString().slice(0,10) },
+      { key:'bu', label:'BU', fmt:r=>r.bu },
+      { key:'status', label:'Status', fmt:r=>r.status },
+      { key:'priority', label:'Priority', fmt:r=>r.priority },
+      { key:'workType', label:'Work Type', fmt:r=>r.workType },
+      { key:'assignedTo', label:'Assigned To', fmt:r=>r.assignedTo },
+      { key:'hours', label:'Hours', fmt:r=>fmtNum(r.hours) },
+      { key:'cost', label:'Cost', fmt:r=>fmtMoney(r.cost) },
+    ];
+
+    rows = rows.slice().sort((a,b) => {
+      const k = itemsSort.key;
+      const av = a[k], bv = b[k];
+      if (av < bv) return -1*itemsSort.dir;
+      if (av > bv) return 1*itemsSort.dir;
+      return 0;
+    });
+
+    const head = document.getElementById('itemsTableHead');
+    head.innerHTML = '';
+    cols.forEach(c => {
+      const th = document.createElement('th');
+      th.className = 'sortable';
+      const arrow = itemsSort.key === c.key ? (itemsSort.dir===1?'↑':'↓') : '';
+      th.innerHTML = `${c.label} <span class="arrow">${arrow}</span>`;
+      th.addEventListener('click', () => {
+        if (itemsSort.key === c.key) itemsSort.dir *= -1; else { itemsSort.key = c.key; itemsSort.dir = -1; }
+        renderItemsTable();
+      });
+      head.appendChild(th);
+    });
+
+    const shown = rows.slice(0, 150);
+    const tbody = document.querySelector('#itemsTable tbody');
+    tbody.innerHTML = '';
+    shown.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = cols.map(c => `<td>${c.fmt(r)}</td>`).join('');
+      tbody.appendChild(tr);
+    });
+    document.getElementById('itemsTag').textContent = `${shown.length} of ${rows.length} items shown`;
+  }
+
+  function renderAll(){
+    if (!state) return;
+    const range = getSelectedRange();
+    const rows = scopedRows();
+    const bus = buUniverse();
+    const kpi = computeKPIs(rows, range.start, range.end, bus);
+
+    const pKey = prevPeriodKey();
+    let prevKpi = null, prevLabel = 'prior period';
+    if (pKey){
+      const pr = periodRange(pKey, periodMode);
+      prevKpi = computeKPIs(rows, pr.start, pr.end, bus);
+      prevLabel = periodLabel(pKey, periodMode);
+    }
+
+    renderScopeBanner();
+    renderKPIRow(kpi, prevKpi, prevLabel);
+    renderLeftChartAndTable();
+    renderTrendCharts();
+    renderPieBreakdown('chartPriority', 'priority', 'priority');
+    renderPieBreakdown('chartProjectType', 'projectType', 'projectType');
+    renderItemsTable();
+  }
+
+  // ---------- PowerPoint export ----------
+  const PPT = { cyan:'2FA79B', amber:'D98F2B', coral:'D64550', ink:'12181F', muted:'5B6B7C', line:'DEE4EA', bg:'F7F9FB', dark:'0B0F14' };
+  function pptTier(p){ return p==null?PPT.muted:p>=85?PPT.cyan:p>=65?PPT.amber:PPT.coral; }
+  function printSafeAccent(hex){
+    const [r,g,b] = hexToRgb(hex);
+    const luminance = (0.299*r + 0.587*g + 0.114*b) / 255;
+    const safe = luminance > 0.75 ? mixHex(hex, '#000000', 0.35) : hex;
+    return safe.replace('#','');
+  }
+  function syncPPTAccentsFromTheme(){
+    PPT.cyan = printSafeAccent(theme.cyan);
+    PPT.amber = printSafeAccent(theme.amber);
+    PPT.coral = printSafeAccent(theme.coral);
+  }
+
+  function buildPPTX(){
+    if (!state) return;
+    const btn = document.getElementById('pptBtn'), label = document.getElementById('pptBtnLabel');
+    btn.disabled = true; label.textContent = 'Building…';
+    syncPPTAccentsFromTheme();
+
+    try{
+      const range = getSelectedRange();
+      const rows = scopedRows();
+      const bus = buUniverse();
+      const kpi = computeKPIs(rows, range.start, range.end, bus);
+      const pKey = prevPeriodKey();
+      let prevKpi = null, prevLabel = 'prior period';
+      if (pKey){ const pr = periodRange(pKey, periodMode); prevKpi = computeKPIs(rows, pr.start, pr.end, bus); prevLabel = periodLabel(pKey, periodMode); }
+
+      const isConsolidated = scopeBU === 'ALL';
+      const periodLbl = periodKeySel ? periodLabel(periodKeySel, periodMode) : 'All time';
+      const scopeParts = [scopeBU === 'ALL' ? `All ${state.buList.length} Business Units` : scopeBU];
+      if (scopeLead !== 'ALL') scopeParts.push(`Lead: ${scopeLead}`);
+      const scopeLbl = scopeParts.join(' · ');
+
+      const series = getTrendSeries();
+
+      const pres = new PptxGenJS();
+      pres.defineLayout({ name:'WIDE', width:13.333, height:7.5 });
+      pres.layout = 'WIDE';
+
+      function pctText(v){ return v==null?'—':Math.round(v)+'%'; }
+
+      // Slide 1 — Title
+      {
+        const sl = pres.addSlide();
+        sl.background = { color: PPT.dark };
+        sl.addText('Creative Solutions', { x:0.7, y:2.6, w:11.9, h:1.0, fontSize:40, bold:true, color:'FFFFFF', fontFace:'Arial' });
+        sl.addText('Performance Review', { x:0.7, y:3.5, w:11.9, h:0.6, fontSize:20, color:PPT.cyan, fontFace:'Arial' });
+        sl.addText(`${scopeLbl}  ·  ${periodLbl}`, { x:0.7, y:4.15, w:11.9, h:0.4, fontSize:14, color:'AEB9C4', fontFace:'Arial' });
+        sl.addText(`Generated ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}`, { x:0.7, y:6.9, w:11.9, h:0.3, fontSize:10, color:'5B6B7C', fontFace:'Arial' });
+      }
+
+      // Slide 2 — Executive summary
+      {
+        const sl = pres.addSlide();
+        sl.background = { color: PPT.bg };
+        sl.addText('Executive Summary', { x:0.6, y:0.35, w:8, h:0.5, fontSize:22, bold:true, color:PPT.ink, fontFace:'Arial' });
+        sl.addText(`${scopeLbl} · ${periodLbl}`, { x:0.6, y:0.82, w:10, h:0.3, fontSize:11, color:PPT.muted, fontFace:'Arial' });
+
+        const cards = [
+          { label:'Utilization', value: pctText(kpi.utilization), color: pptTier(kpi.utilization),
+            foot: kpi.utilization==null ? 'no FTE data in scope' : `vs ${prevKpi&&prevKpi.utilization!=null?Math.round(prevKpi.utilization)+'%':'—'} ${prevLabel}` },
+          { label:'Projects', value: kpi.projects.toLocaleString('en-US'), color: PPT.ink,
+            foot: prevKpi ? `${prevKpi.projects.toLocaleString('en-US')} in ${prevLabel}` : 'no prior period' },
+          { label:'Total Hours', value: kpi.totalHours.toLocaleString('en-US'), color: PPT.ink,
+            foot: prevKpi ? `${prevKpi.totalHours.toLocaleString('en-US')} in ${prevLabel}` : 'no prior period' },
+          { label:'Cost Avoidance', value: fmtMoney(kpi.totalCost), color: PPT.ink,
+            foot: prevKpi ? `${fmtMoney(prevKpi.totalCost)} in ${prevLabel}` : 'no prior period' },
+        ];
+        const cardW=2.85, gap=0.25, startX=0.6, y=1.5, h=2.2;
+        cards.forEach((c,i) => {
+          const x = startX + i*(cardW+gap);
+          sl.addShape('roundRect', { x, y, w:cardW, h, fill:{color:'FFFFFF'}, line:{color:PPT.line, width:1}, rectRadius:0.08 });
+          sl.addText(c.label.toUpperCase(), { x:x+0.2, y:y+0.2, w:cardW-0.4, h:0.35, fontSize:10.5, color:PPT.muted, bold:true, fontFace:'Arial' });
+          sl.addText(String(c.value), { x:x+0.2, y:y+0.55, w:cardW-0.4, h:0.9, fontSize:i===0?36:28, bold:true, color:c.color, fontFace:'Arial' });
+          sl.addText(c.foot, { x:x+0.2, y:y+1.55, w:cardW-0.4, h:0.5, fontSize:9.5, color:PPT.muted, fontFace:'Arial' });
+        });
+        sl.addText('Prepared for leadership review · figures reflect the selected reporting period', { x:0.6, y:6.9, w:11, h:0.3, fontSize:9, color:PPT.muted, italic:true, fontFace:'Arial' });
+      }
+
+      // Slide 3 — BU leaderboard or Work Type breakdown
+      {
+        const sl = pres.addSlide();
+        sl.background = { color: PPT.bg };
+        sl.addText(isConsolidated ? 'Utilization by Business Unit' : `Work Type Breakdown — ${scopeBU}`,
+          { x:0.6, y:0.35, w:11.5, h:0.5, fontSize:22, bold:true, color:PPT.ink, fontFace:'Arial' });
+
+        if (isConsolidated){
+          const board = computeBULeaderboard(range.start, range.end).slice(0,15);
+          sl.addChart(pres.ChartType.bar, [{ name:'Utilization %', labels:board.map(b=>b.bu), values:board.map(b=>b.utilization==null?0:Math.round(b.utilization*10)/10) }], {
+            x:0.6, y:1.0, w:6.4, h:4.9, barDir:'bar',
+            chartColors: board.map(b=>pptTier(b.utilization)),
+            valAxisTitle:'Utilization %', showValAxisTitle:true,
+            catAxisLabelColor:PPT.ink, valAxisLabelColor:PPT.ink, showLegend:false, valAxisMaxVal:110,
+          });
+          const rows_ = [['Business Unit','Utilization','Projects','Hours','Cost'].map(t=>({text:t, options:{bold:true, fill:{color:PPT.ink}, color:'FFFFFF'}}))];
+          board.forEach(b => rows_.push([
+            {text:b.bu}, {text:pctText(b.utilization)}, {text:String(b.projects)}, {text:b.totalHours.toLocaleString('en-US')}, {text:fmtMoney(b.totalCost)},
+          ]));
+          sl.addTable(rows_, { x:7.3, y:1.0, w:5.4, h:4.9, fontSize:10, border:{type:'solid', color:PPT.line, pt:0.5}, autoPage:false, valign:'middle' });
+        } else {
+          const wt = computeWorkTypeBreakdown(rows, range.start, range.end).slice(0,15);
+          sl.addChart(pres.ChartType.bar, [{ name:'Hours', labels:wt.map(w=>w.workType), values:wt.map(w=>w.hours) }], {
+            x:0.6, y:1.0, w:6.4, h:4.9, barDir:'bar', chartColors:[PPT.cyan],
+            valAxisTitle:'Hours', showValAxisTitle:true,
+            catAxisLabelColor:PPT.ink, valAxisLabelColor:PPT.ink, showLegend:false,
+          });
+          const rows_ = [['Work Type','Hours','Cost','Items'].map(t=>({text:t, options:{bold:true, fill:{color:PPT.ink}, color:'FFFFFF'}}))];
+          wt.forEach(w => rows_.push([{text:w.workType}, {text:w.hours.toLocaleString('en-US')}, {text:fmtMoney(w.cost)}, {text:String(w.count)}]));
+          sl.addTable(rows_, { x:7.3, y:1.0, w:5.4, h:4.9, fontSize:10, border:{type:'solid', color:PPT.line, pt:0.5}, autoPage:false, valign:'middle' });
+        }
+      }
+
+      // Slide 4 — Projects & Hours trend
+      {
+        const sl = pres.addSlide();
+        sl.background = { color: PPT.bg };
+        sl.addText('Projects & Hours Trend', { x:0.6, y:0.35, w:11.5, h:0.5, fontSize:22, bold:true, color:PPT.ink, fontFace:'Arial' });
+        const labels = series.map(s=>s.label);
+        sl.addChart(pres.ChartType.bar, [{ name:'Projects', labels, values:series.map(s=>s.projects) }], {
+          x:0.6, y:1.0, w:6.0, h:4.6, chartColors:[PPT.cyan], showLegend:false,
+          catAxisLabelColor:PPT.ink, valAxisLabelColor:PPT.ink,
+        });
+        sl.addChart(pres.ChartType.bar, [{ name:'Hours', labels, values:series.map(s=>s.totalHours) }], {
+          x:6.9, y:1.0, w:5.8, h:4.6, chartColors:[PPT.amber], showLegend:false,
+          catAxisLabelColor:PPT.ink, valAxisLabelColor:PPT.ink,
+        });
+      }
+
+      // Slide 5 — Utilization & Cost trend
+      {
+        const sl = pres.addSlide();
+        sl.background = { color: PPT.bg };
+        sl.addText('Utilization & Cost Avoidance Trend', { x:0.6, y:0.35, w:11.5, h:0.5, fontSize:22, bold:true, color:PPT.ink, fontFace:'Arial' });
+        const labels = series.map(s=>s.label);
+        sl.addChart(pres.ChartType.line, [{ name:'Utilization %', labels, values:series.map(s=>s.utilization==null?0:Math.round(s.utilization*10)/10) }], {
+          x:0.6, y:1.0, w:6.0, h:4.6, chartColors:[PPT.cyan], showLegend:false,
+          catAxisLabelColor:PPT.ink, valAxisLabelColor:PPT.ink, lineDataSymbol:'circle', lineSize:2.5,
+        });
+        sl.addChart(pres.ChartType.bar, [{ name:'Cost', labels, values:series.map(s=>s.totalCost) }], {
+          x:6.9, y:1.0, w:5.8, h:4.6, chartColors:[PPT.coral], showLegend:false,
+          catAxisLabelColor:PPT.ink, valAxisLabelColor:PPT.ink,
+        });
+      }
+
+      // Slide 6 — Priority & Project Type breakdown
+      {
+        const sl = pres.addSlide();
+        sl.background = { color: PPT.bg };
+        sl.addText('Priority & Project Type Breakdown', { x:0.6, y:0.35, w:11.5, h:0.5, fontSize:22, bold:true, color:PPT.ink, fontFace:'Arial' });
+
+        const priorityRows = groupBy(scopedRowsExcluding('priority').filter(r=>range.start?(r.date>=range.start&&r.date<range.end):true), 'priority');
+        const typeRows = groupBy(scopedRowsExcluding('projectType').filter(r=>range.start?(r.date>=range.start&&r.date<range.end):true), 'projectType');
+        const pptPalette = n => { const base=[PPT.cyan,PPT.amber,PPT.coral]; const out=[]; for(let i=0;i<n;i++) out.push(base[i%3]); return out; };
+
+        sl.addChart(pres.ChartType.pie, [{ name:'Hours', labels:priorityRows.map(s=>s.key), values:priorityRows.map(s=>s.hours) }], {
+          x:0.6, y:1.0, w:6.0, h:4.6, chartColors: pptPalette(priorityRows.length),
+          showLegend:true, legendColor:PPT.ink, showValue:true, dataLabelColor:'FFFFFF', dataLabelFontSize:10,
+        });
+        sl.addChart(pres.ChartType.pie, [{ name:'Hours', labels:typeRows.map(s=>s.key), values:typeRows.map(s=>s.hours) }], {
+          x:6.9, y:1.0, w:5.8, h:4.6, chartColors: pptPalette(typeRows.length),
+          showLegend:true, legendColor:PPT.ink, showValue:true, dataLabelColor:'FFFFFF', dataLabelFontSize:10,
+        });
+      }
+
+      const scopeSlug = (scopeBU === 'ALL' ? 'Consolidated' : scopeBU).replace(/[^a-z0-9]+/gi,'_');
+      const periodSlug = (periodKeySel || 'all').replace(/[^a-z0-9]+/gi,'_');
+      pres.writeFile({ fileName:`Creative_Solutions_${scopeSlug}_${periodSlug}.pptx` })
+        .then(() => { btn.disabled = false; label.textContent = 'Build PowerPoint'; })
+        .catch(err => { console.error(err); alert('Could not generate the PowerPoint file.\n\n' + err.message); btn.disabled = false; label.textContent = 'Build PowerPoint'; });
+    } catch(err){
+      console.error(err);
+      alert('Could not generate the PowerPoint file.\n\n' + err.message);
+      btn.disabled = false; label.textContent = 'Build PowerPoint';
+    }
+  }
+
+  document.getElementById('pptBtn').addEventListener('click', buildPPTX);
+
+  // ---------- file loading ----------
+  function handleFile(file){
+    if (!file) return;
+    document.getElementById('fileName').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type:'array', cellDates:true });
+        state = parseWorkbook(wb);
+        scopeBU = 'ALL'; scopeLead = 'ALL'; periodMode = 'month';
+        quickFilters = { priority:'ALL', projectType:'ALL' };
+        [...document.getElementById('modeToggle').children].forEach(b=>b.classList.toggle('active', b.dataset.mode==='month'));
+        populateBUSelect();
+        populateLeadSelect();
+        populatePeriodSelect();
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('filterBar').style.display = 'flex';
+        document.getElementById('app').classList.add('ready');
+        const pptBtn = document.getElementById('pptBtn');
+        pptBtn.disabled = false; pptBtn.title = 'Export the current view to a PowerPoint deck';
+        renderAll();
+      } catch(err){
+        alert("Could not read this workbook. Make sure it matches the expected sheet names and columns (Dim_BU, Fact_BU_Resources, Fact_Utilization).\n\n" + err.message);
+        console.error(err);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  document.getElementById('fileInput').addEventListener('change', e => handleFile(e.target.files[0]));
+  document.getElementById('fileInput2').addEventListener('change', e => handleFile(e.target.files[0]));
+
+  applyTheme({ ...DEFAULT_THEME });
+  wireDesignPanel();
+  syncDesignInputs();
+})();
+</script>
+</body>
+</html>

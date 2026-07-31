@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Signal — Newsletter Builder</title>
+<style>
+  :root{
+    --ink:#17233D;
+    --ink-2: color-mix(in srgb, var(--ink) 85%, white);
+    --paper:#F0F2F6;
+    --card:#FFFFFF;
+    --amber:#E0A542;
+    --amber-deep: color-mix(in srgb, var(--amber) 62%, black);
+    --slate:#2B3446;
+    --muted:#69707F;
+    --line:#DCE0E7;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --header-scale: 1;
+    --body-scale: 1;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--paper);font-family:var(--font-body);color:var(--slate);}
+
+  /* ---------- Builder shell ---------- */
+  .shell{display:grid;grid-template-columns:320px 1fr;min-height:100vh;}
+  @media (max-width:900px){.shell{grid-template-columns:1fr;}}
+
+  .panel{background:var(--card);border-right:1px solid var(--line);padding:24px 22px;}
+  .panel h1{font-family:var(--font-display);font-size:19px;margin:0 0 4px;color:var(--ink);}
+  .panel .sub{font-size:12.5px;color:var(--muted);margin:0 0 22px;line-height:1.5;}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .field input[type=text]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;font-size:13.5px;font-family:var(--font-body);color:var(--slate);background:#fff;}
+  .field input[type=text]:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:var(--amber);}
+  .field select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;color:var(--slate);background:#fff;}
+  .field select:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:var(--amber);}
+
+  .design-block{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0 18px;margin-bottom:18px;}
+  .design-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;margin-bottom:12px;}
+  .design-header .design-title{font-family:var(--font-display);font-size:14px;color:var(--ink);margin:0;}
+  .design-header .chevron{color:var(--muted);font-size:11px;transition:transform .15s ease;}
+  .design-block.collapsed .design-header{margin-bottom:0;}
+  .design-block.collapsed .design-header .chevron{transform:rotate(-90deg);}
+  .design-block.collapsed .design-content{display:none;}
+  .swatch-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .swatch-row span{font-size:12.5px;color:var(--slate);}
+  .swatch-row input[type=color]{width:38px;height:28px;border:1px solid var(--line);border-radius:6px;padding:2px;cursor:pointer;background:#fff;}
+  .reset-link{background:none;border:none;padding:0;font-size:11.5px;color:var(--muted);text-decoration:underline;cursor:pointer;width:auto;margin-top:2px;}
+  .reset-link:hover{color:var(--ink);}
+
+  .dropzone{border:1.5px dashed var(--line);border-radius:10px;padding:22px 14px;text-align:center;cursor:pointer;transition:border-color .15s, background .15s;}
+  .dropzone:hover, .dropzone.drag{border-color:var(--amber);background:#FBF6EC;}
+  .dropzone .pulse{width:34px;height:34px;border-radius:50%;background:var(--amber);margin:0 auto 10px;position:relative;}
+  .dropzone .pulse::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid var(--amber);opacity:.5;}
+  .dropzone p{margin:0;font-size:13px;color:var(--slate);font-weight:600;}
+  .dropzone span{display:block;margin-top:4px;font-size:11.5px;color:var(--muted);}
+  .filename{margin-top:10px;font-size:12.5px;color:var(--ink);background:var(--paper);border-radius:6px;padding:6px 9px;word-break:break-all;}
+
+  button.primary, button.secondary{width:100%;padding:11px;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:8px;border:none;font-family:var(--font-body);}
+  button.primary{background:var(--ink);color:#fff;}
+  button.primary:disabled{background:#B7BDC9;cursor:not-allowed;}
+  button.primary:hover:not(:disabled){background:var(--ink-2);}
+  button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);}
+  button.secondary:hover:not(:disabled){border-color:var(--ink);}
+  button.secondary:disabled{color:#B7BDC9;border-color:var(--line);cursor:not-allowed;}
+
+  .status{font-size:12px;color:var(--muted);margin-top:10px;min-height:16px;}
+  .status.err{color:#B4403A;}
+  .status.ok{color:#2E7D53;}
+
+  .hint{font-size:11.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--line);margin-top:22px;padding-top:16px;}
+  .hint b{color:var(--slate);}
+
+  /* ---------- Preview stage ---------- */
+  .stage{padding:36px 28px;overflow-y:auto;}
+  .stage-inner{max-width:680px;margin:0 auto;}
+  .empty{max-width:420px;margin:80px auto;text-align:center;color:var(--muted);}
+  .empty .ring{width:52px;height:52px;border-radius:50%;border:2px solid var(--amber);margin:0 auto 18px;position:relative;}
+  .empty .ring::before{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--amber);}
+  .empty h2{font-family:var(--font-display);color:var(--ink);font-size:19px;margin:0 0 8px;}
+  .empty p{font-size:13.5px;line-height:1.6;margin:0;}
+
+  /* ---------- Newsletter template ---------- */
+  .newsletter{background:var(--card);border-radius:2px;box-shadow:0 1px 3px rgba(23,35,61,.08), 0 12px 30px -14px rgba(23,35,61,.25);overflow:hidden;}
+  .masthead{background:var(--ink);color:#fff;padding:26px 30px 22px;position:relative;}
+  .masthead .top-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#B9C2D6;margin-bottom:14px;}
+  .masthead .top-row .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--amber);margin-right:7px;vertical-align:middle;}
+  .masthead h1{font-family:var(--font-display);font-size:calc(34px * var(--header-scale));letter-spacing:.01em;margin:0;color:#fff;}
+  .masthead .rule{height:3px;background:var(--amber);width:56px;margin-top:14px;}
+
+  .lead{padding:34px 30px 8px;}
+  .lead h2{font-family:var(--font-display);font-size:calc(27px * var(--header-scale));line-height:1.25;color:var(--ink);margin:0 0 14px;}
+  .lead img{width:100%;border-radius:4px;display:block;margin-bottom:16px;}
+  .lead .body-text{font-size:calc(15px * var(--body-scale));line-height:1.7;color:var(--slate);}
+  .lead .body-text p{margin:0 0 14px;}
+
+  .divider{display:flex;align-items:center;gap:10px;margin:38px 30px 4px;}
+  .divider .node{width:9px;height:9px;border-radius:50%;background:var(--amber);flex:none;position:relative;}
+  .divider .node::after{content:"";position:absolute;inset:-4px;border:1px solid var(--amber);border-radius:50%;opacity:.45;}
+  .divider .line{flex:1;height:1px;background:var(--line);}
+  .divider .label{font-family:var(--font-display);font-size:calc(12.5px * var(--header-scale));letter-spacing:.09em;text-transform:uppercase;color:var(--amber-deep);font-weight:700;white-space:nowrap;}
+
+  /* Full Color Band: title sits on a solid full-bleed bar */
+  .banner-band .divider{display:block;margin:38px 0 4px;}
+  .banner-band .divider .node, .banner-band .divider .line{display:none;}
+  .banner-band .divider .label{display:block;background:var(--ink);color:#fff;padding:11px 30px;font-size:calc(12.5px * var(--header-scale));}
+
+  /* Underline Heading: larger editorial title with a short accent rule beneath */
+  .banner-underline .divider{display:block;margin:40px 30px 6px;}
+  .banner-underline .divider .node, .banner-underline .divider .line{display:none;}
+  .banner-underline .divider .label{display:inline-block;color:var(--ink);text-transform:none;letter-spacing:.01em;font-size:calc(19px * var(--header-scale));padding-bottom:9px;border-bottom:3px solid var(--amber);}
+
+  /* Ribbon Tag: flag-shaped label with a hairline continuing across the row */
+  .banner-ribbon .divider{display:flex;align-items:center;gap:0;margin:40px 0 4px;}
+  .banner-ribbon .divider .node{display:none;}
+  .banner-ribbon .divider .label{background:var(--amber);color:var(--ink);padding:9px 26px 9px 30px;font-size:calc(12.5px * var(--header-scale));clip-path:polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%);margin-right:-2px;}
+  .banner-ribbon .divider .line{flex:1;margin-right:30px;}
+
+  .section-body{padding:14px 30px 8px;}
+  .intro-text{font-size:calc(14.5px * var(--body-scale));line-height:1.7;color:var(--slate);margin-bottom:18px;}
+  .intro-text p{margin:0 0 12px;}
+  .intro-text img{max-width:100%;border-radius:4px;margin:6px 0 14px;}
+
+  .article{background:var(--paper);border-radius:8px;padding:18px 20px;margin-bottom:16px;}
+  .article h3{font-family:var(--font-display);font-size:calc(17px * var(--header-scale));color:var(--ink);margin:0 0 8px;}
+  .article img{width:100%;border-radius:5px;margin:2px 0 12px;display:block;}
+  .article .body-text{font-size:calc(13.8px * var(--body-scale));line-height:1.68;color:var(--slate);}
+  .article .body-text p{margin:0 0 10px;}
+  .article ul, .article ol{padding-left:18px;margin:0 0 10px;}
+  .body-text ul li::marker, .body-text ol li::marker{color:var(--amber-deep);font-weight:700;}
+
+  .spotlight{background:linear-gradient(135deg, var(--ink), color-mix(in srgb, var(--ink) 78%, white));border-radius:8px;padding:22px 20px;margin-bottom:16px;display:flex;gap:16px;align-items:flex-start;color:#fff;}
+  .spotlight .photo{width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--amber);}
+  .spotlight .photo.placeholder{background:color-mix(in srgb, var(--ink) 65%, white);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:22px;color:var(--amber);}
+  .spotlight .txt .eyebrow{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:4px;}
+  .spotlight .txt h3{font-family:var(--font-display);font-size:calc(17px * var(--header-scale));margin:0 0 6px;color:#fff;}
+  .spotlight .txt .body-text{font-size:calc(13.3px * var(--body-scale));line-height:1.6;color:#D7DDEA;}
+  .spotlight .txt .body-text p{margin:0 0 8px;}
+
+  .footer{background:var(--ink);color:#B9C2D6;text-align:center;font-size:11.5px;letter-spacing:.04em;padding:20px;margin-top:8px;}
+  .footer .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber);margin-right:6px;vertical-align:middle;}
+
+  @media (max-width:520px){
+    .masthead h1{font-size:calc(26px * var(--header-scale));}
+    .lead h2{font-size:calc(22px * var(--header-scale));}
+    .spotlight{flex-direction:column;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="panel">
+    <h1>The Signal — Builder</h1>
+    <p class="sub">Upload a Word doc. Heading&nbsp;1 starts a new section, Heading&nbsp;2 starts an article inside it. Name a heading with "spotlight", "profile", or "welcome" to get the profile-photo layout.</p>
+
+    <div class="field">
+      <label for="nlName">Newsletter name</label>
+      <input type="text" id="nlName" value="The Signal">
+    </div>
+    <div class="field">
+      <label for="nlIssue">Issue label</label>
+      <input type="text" id="nlIssue" value="Issue 01">
+    </div>
+    <div class="field">
+      <label for="nlDate">Date</label>
+      <input type="text" id="nlDate" value="">
+    </div>
+
+    <div class="design-block" id="designBlock">
+      <div class="design-header" id="designHeader" role="button" tabindex="0" aria-expanded="true">
+        <p class="design-title">Design system</p>
+        <span class="chevron" id="designChevron">▾</span>
+      </div>
+
+      <div class="design-content" id="designContent">
+      <div class="field">
+        <label for="fontTitle">Title &amp; headings font</label>
+        <select id="fontTitle">
+          <option value="editorialSerif">Editorial Serif (Georgia)</option>
+          <option value="classicSerif">Classic Serif (Times)</option>
+          <option value="modernSans">Modern Sans (Helvetica)</option>
+          <option value="roundedSans">Rounded Sans (Segoe UI)</option>
+          <option value="impact">Bold Impact</option>
+          <option value="monospace">Monospace / Technical</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="fontBody">Body &amp; bullets font</label>
+        <select id="fontBody">
+          <option value="systemSans">System Sans</option>
+          <option value="classicSerif">Classic Serif</option>
+          <option value="verdana">Verdana Clean</option>
+          <option value="trebuchet">Trebuchet</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="headerSize">Header size</label>
+        <select id="headerSize">
+          <option value="0.85">Compact</option>
+          <option value="1">Standard</option>
+          <option value="1.15">Large</option>
+          <option value="1.3">Extra large</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="bodySize">Body text size</label>
+        <select id="bodySize">
+          <option value="0.9">Compact</option>
+          <option value="1">Standard</option>
+          <option value="1.1">Large</option>
+          <option value="1.2">Extra large</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="bannerStyle">Section header banner</label>
+        <select id="bannerStyle">
+          <option value="dot">Signal Dot (default)</option>
+          <option value="band">Full Color Band</option>
+          <option value="underline">Underline Heading</option>
+          <option value="ribbon">Ribbon Tag</option>
+        </select>
+      </div>
+
+      <div class="swatch-row">
+        <span>Header &amp; heading color</span>
+        <input type="color" id="colorInk" value="#17233D">
+      </div>
+      <div class="swatch-row">
+        <span>Accent / highlight color</span>
+        <input type="color" id="colorAmber" value="#e0a542">
+      </div>
+      <div class="swatch-row">
+        <span>Background &amp; card tint</span>
+        <input type="color" id="colorPaper" value="#f0f2f6">
+      </div>
+      <div class="swatch-row">
+        <span>Body text color</span>
+        <input type="color" id="colorSlate" value="#2b3446">
+      </div>
+
+      <button class="reset-link" id="resetDesignBtn">Reset to default design</button>
+      </div>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      <div class="pulse"></div>
+      <p>Click to upload, or drag a .docx here</p>
+      <span>Word documents only (.docx)</span>
+    </div>
+    <input type="file" id="fileInput" accept=".docx" style="display:none">
+    <div class="filename" id="filenameBox" style="display:none;"></div>
+    <div class="status" id="status"></div>
+
+    <button class="primary" id="downloadBtn" disabled>Download newsletter (.html)</button>
+    <button class="secondary" id="downloadJsonBtn" disabled>Download content (.json)</button>
+    <button class="secondary" id="rebuildBtn" style="display:none;">Rebuild with current settings</button>
+
+    <div class="hint">
+      <b>Tips</b><br>
+      • First image after a heading becomes that section's photo.<br>
+      • Keep spotlight bios to a short first line (name) then the write-up — the first short line is used as the name.<br>
+      • Everything runs in your browser; no file is uploaded anywhere.
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-inner" id="stageInner">
+      <div class="empty">
+        <div class="ring"></div>
+        <h2>Nothing built yet</h2>
+        <p>Upload a Word document on the left. Your newsletter will render here, styled and ready to download.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="lib/mammoth.browser.min.js"></script>
+<script>
+(function(){
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const filenameBox = document.getElementById('filenameBox');
+  const statusEl = document.getElementById('status');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+  const rebuildBtn = document.getElementById('rebuildBtn');
+  const stageInner = document.getElementById('stageInner');
+  const nlName = document.getElementById('nlName');
+  const nlIssue = document.getElementById('nlIssue');
+  const nlDate = document.getElementById('nlDate');
+  const fontTitleSel = document.getElementById('fontTitle');
+  const fontBodySel = document.getElementById('fontBody');
+  const headerSizeSel = document.getElementById('headerSize');
+  const bodySizeSel = document.getElementById('bodySize');
+  const bannerStyleSel = document.getElementById('bannerStyle');
+  const colorInk = document.getElementById('colorInk');
+  const colorAmber = document.getElementById('colorAmber');
+  const colorPaper = document.getElementById('colorPaper');
+  const colorSlate = document.getElementById('colorSlate');
+  const resetDesignBtn = document.getElementById('resetDesignBtn');
+  const designBlock = document.getElementById('designBlock');
+  const designHeader = document.getElementById('designHeader');
+
+  function toggleDesignBlock(){
+    const collapsed = designBlock.classList.toggle('collapsed');
+    designHeader.setAttribute('aria-expanded', String(!collapsed));
+  }
+  designHeader.addEventListener('click', toggleDesignBlock);
+  designHeader.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      toggleDesignBlock();
+    }
+  });
+
+  const FONT_STACKS = {
+    title: {
+      editorialSerif: "Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif",
+      classicSerif: "'Times New Roman', Times, serif",
+      modernSans: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+      roundedSans: "'Segoe UI', Verdana, sans-serif",
+      impact: "Impact, 'Arial Black', Arial, sans-serif",
+      monospace: "'Courier New', Courier, monospace"
+    },
+    body: {
+      systemSans: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      classicSerif: "Georgia, 'Times New Roman', serif",
+      verdana: "Verdana, Geneva, sans-serif",
+      trebuchet: "'Trebuchet MS', Helvetica, sans-serif"
+    }
+  };
+
+  const DEFAULT_DESIGN = {
+    fontTitle: 'editorialSerif', fontBody: 'systemSans',
+    headerSize: '1', bodySize: '1', bannerStyle: 'dot',
+    ink: '#17233d', amber: '#e0a542', paper: '#f0f2f6', slate: '#2b3446'
+  };
+
+  function applyDesign(){
+    const root = document.documentElement.style;
+    root.setProperty('--font-display', FONT_STACKS.title[fontTitleSel.value]);
+    root.setProperty('--font-body', FONT_STACKS.body[fontBodySel.value]);
+    root.setProperty('--header-scale', headerSizeSel.value);
+    root.setProperty('--body-scale', bodySizeSel.value);
+    root.setProperty('--ink', colorInk.value);
+    root.setProperty('--amber', colorAmber.value);
+    root.setProperty('--paper', colorPaper.value);
+    root.setProperty('--slate', colorSlate.value);
+  }
+
+  function currentDesignTokens(){
+    return {
+      titleFont: fontTitleSel.options[fontTitleSel.selectedIndex].text,
+      titleFontFamily: FONT_STACKS.title[fontTitleSel.value],
+      bodyFont: fontBodySel.options[fontBodySel.selectedIndex].text,
+      bodyFontFamily: FONT_STACKS.body[fontBodySel.value],
+      headerSize: headerSizeSel.options[headerSizeSel.selectedIndex].text,
+      headerScale: headerSizeSel.value,
+      bodySize: bodySizeSel.options[bodySizeSel.selectedIndex].text,
+      bodyScale: bodySizeSel.value,
+      headerColor: colorInk.value,
+      accentColor: colorAmber.value,
+      backgroundColor: colorPaper.value,
+      textColor: colorSlate.value,
+      sectionBannerStyle: bannerStyleSel.options[bannerStyleSel.selectedIndex].text
+    };
+  }
+
+  [fontTitleSel, fontBodySel, headerSizeSel, bodySizeSel, colorInk, colorAmber, colorPaper, colorSlate].forEach(el => {
+    el.addEventListener('input', applyDesign);
+    el.addEventListener('change', applyDesign);
+  });
+
+  bannerStyleSel.addEventListener('change', () => { if (lastRawHtml) buildNewsletter(lastRawHtml); });
+
+  resetDesignBtn.addEventListener('click', () => {
+    fontTitleSel.value = DEFAULT_DESIGN.fontTitle;
+    fontBodySel.value = DEFAULT_DESIGN.fontBody;
+    headerSizeSel.value = DEFAULT_DESIGN.headerSize;
+    bodySizeSel.value = DEFAULT_DESIGN.bodySize;
+    bannerStyleSel.value = DEFAULT_DESIGN.bannerStyle;
+    colorInk.value = DEFAULT_DESIGN.ink;
+    colorAmber.value = DEFAULT_DESIGN.amber;
+    colorPaper.value = DEFAULT_DESIGN.paper;
+    colorSlate.value = DEFAULT_DESIGN.slate;
+    applyDesign();
+    if (lastRawHtml) buildNewsletter(lastRawHtml);
+  });
+
+  applyDesign();
+
+  let lastRawHtml = null;
+  let lastProcessed = null;
+  nlDate.value = new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('drag');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+  rebuildBtn.addEventListener('click', () => { if (lastRawHtml) buildNewsletter(lastRawHtml); });
+  [nlName, nlIssue, nlDate].forEach(el => el.addEventListener('input', () => { if (lastRawHtml) buildNewsletter(lastRawHtml); }));
+
+  function setStatus(msg, kind){
+    statusEl.textContent = msg || '';
+    statusEl.className = 'status' + (kind ? ' ' + kind : '');
+  }
+
+  function handleFile(file){
+    if (!/\.docx$/i.test(file.name)){
+      setStatus('Please upload a .docx file.', 'err');
+      return;
+    }
+    filenameBox.style.display = 'block';
+    filenameBox.textContent = file.name;
+    setStatus('Reading document…');
+    const reader = new FileReader();
+    reader.onload = function(e){
+      mammoth.convertToHtml({ arrayBuffer: e.target.result }, {
+        styleMap: [
+          "p[style-name='Heading 1'] => h1:fresh",
+          "p[style-name='Heading 2'] => h2:fresh",
+          "p[style-name='Title'] => h1:fresh"
+        ]
+      }).then(function(result){
+        lastRawHtml = result.value;
+        buildNewsletter(lastRawHtml);
+        setStatus('Newsletter built. Adjust the fields above and it will update.', 'ok');
+        downloadBtn.disabled = false;
+        downloadJsonBtn.disabled = false;
+        rebuildBtn.style.display = 'block';
+      }).catch(function(err){
+        console.error(err);
+        setStatus('Could not read that file: ' + err.message, 'err');
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ---------- Parse mammoth HTML into a section/article tree ----------
+  function parseStructure(html){
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const nodes = Array.from(doc.body.children);
+    const sections = [];
+    let currentSection = null;
+    let currentArticle = null;
+
+    function newSection(title){
+      currentSection = { title: title || '', articles: [] };
+      currentArticle = null;
+      sections.push(currentSection);
+    }
+    function ensureSection(){
+      if (!currentSection) newSection('');
+    }
+    function newArticle(title){
+      ensureSection();
+      currentArticle = { title: title || '', nodeHtmls: [] };
+      currentSection.articles.push(currentArticle);
+    }
+    function ensureArticle(){
+      ensureSection();
+      if (!currentArticle) newArticle('');
+    }
+
+    nodes.forEach(node => {
+      const tag = node.tagName;
+      if (tag === 'H1'){
+        newSection(node.textContent.trim());
+      } else if (tag === 'H2'){
+        newArticle(node.textContent.trim());
+      } else {
+        ensureArticle();
+        currentArticle.nodeHtmls.push(node.outerHTML);
+      }
+    });
+    return sections.filter(s => s.articles.length || s.title);
+  }
+
+  function firstImageAndRest(nodeHtmls){
+    const wrap = document.createElement('div');
+    wrap.innerHTML = nodeHtmls.join('');
+    const img = wrap.querySelector('img');
+    let imgHtml = null;
+    if (img){
+      imgHtml = img.outerHTML;
+      // remove the element (or its wrapping paragraph if that paragraph is now empty)
+      const parent = img.parentElement;
+      img.remove();
+      if (parent && parent !== wrap && !parent.textContent.trim() && !parent.querySelector('img')) {
+        parent.remove();
+      }
+    }
+    return { imgHtml, restHtml: wrap.innerHTML.trim() };
+  }
+
+  function isSpotlight(title){
+    return /(spotlight|profile|welcome|new hire|new joiner|meet\s)/i.test(title);
+  }
+
+  function extractNameAndBio(restHtml, title){
+    const wrap = document.createElement('div');
+    wrap.innerHTML = restHtml;
+    const paras = Array.from(wrap.children).filter(n => n.tagName === 'P' && n.textContent.trim());
+    let name = title.replace(/^(employee|team|member)?\s*spotlight[:\-]?\s*/i,'').replace(/^welcome[:\-]?\s*/i,'').replace(/^meet\s+/i,'').trim();
+    let bioHtml = restHtml;
+    if (paras.length && paras[0].textContent.trim().length <= 45){
+      name = paras[0].textContent.trim();
+      paras[0].remove();
+      bioHtml = wrap.innerHTML.trim();
+    }
+    return { name: name || 'Team member', bioHtml };
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ---------- Turn the raw heading/article tree into a plain-data model ----------
+  // This model is the single source of truth: the HTML preview is rendered from
+  // it, and the JSON download is just this object serialized as-is.
+  function processSections(sections){
+    return sections.map((section, si) => {
+      const isLead = si === 0;
+      const articles = section.articles.map((art, ai) => {
+        const { imgHtml, restHtml } = firstImageAndRest(art.nodeHtmls);
+        const imageSrc = imgHtml ? ((imgHtml.match(/src="([^"]+)"/) || [])[1] || null) : null;
+
+        let type, name = null, bodyHtml = restHtml;
+        if (!art.title){
+          type = (isLead && ai === 0) ? 'lead-intro' : 'text';
+        } else if (isSpotlight(art.title)){
+          type = 'spotlight';
+          const extracted = extractNameAndBio(restHtml, art.title);
+          name = extracted.name;
+          bodyHtml = extracted.bioHtml;
+        } else {
+          type = 'article';
+        }
+
+        const plain = document.createElement('div');
+        plain.innerHTML = bodyHtml;
+
+        return {
+          title: art.title || null,
+          type,
+          name,
+          imageSrc,
+          bodyHtml,
+          bodyText: plain.textContent.trim()
+        };
+      });
+      return { title: section.title || null, isLead, articles };
+    });
+  }
+
+  function renderFromModel(model){
+    const { meta, sections } = model;
+    let out = '';
+    out += `<div class="masthead">
+      <div class="top-row"><span><span class="dot"></span>${escapeHtml(meta.issue)}</span><span>${escapeHtml(meta.date)}</span></div>
+      <h1>${escapeHtml(meta.name)}</h1>
+      <div class="rule"></div>
+    </div>`;
+
+    sections.forEach(section => {
+      if (section.isLead){
+        out += `<div class="lead">`;
+        if (section.title) out += `<h2>${escapeHtml(section.title)}</h2>`;
+        section.articles.forEach(art => {
+          if (art.type === 'lead-intro'){
+            if (art.imageSrc) out += `<img src="${art.imageSrc}" alt="">`;
+            out += `<div class="body-text">${art.bodyHtml}</div>`;
+          } else {
+            out += renderArticleFromModel(art);
+          }
+        });
+        out += `</div>`;
+        return;
+      }
+
+      out += `<div class="divider"><span class="node"></span><span class="label">${escapeHtml(section.title || 'More')}</span><span class="line"></span></div>`;
+      out += `<div class="section-body">`;
+      section.articles.forEach(art => {
+        if (art.type === 'text'){
+          out += `<div class="intro-text">${art.imageSrc ? `<img src="${art.imageSrc}" alt="">` : ''}${art.bodyHtml}</div>`;
+        } else {
+          out += renderArticleFromModel(art);
+        }
+      });
+      out += `</div>`;
+    });
+
+    out += `<div class="footer"><span class="dot"></span>${escapeHtml(meta.name)} · ${escapeHtml(meta.issue)}</div>`;
+    return out;
+  }
+
+  function renderArticleFromModel(art){
+    if (art.type === 'spotlight'){
+      const photo = art.imageSrc
+        ? `<img class="photo" src="${art.imageSrc}" alt="">`
+        : `<div class="photo placeholder">${escapeHtml((art.name || 'T').charAt(0).toUpperCase())}</div>`;
+      return `<div class="spotlight">${photo}<div class="txt"><div class="eyebrow">Spotlight</div><h3>${escapeHtml(art.name)}</h3><div class="body-text">${art.bodyHtml}</div></div></div>`;
+    }
+    return `<div class="article">${art.title ? `<h3>${escapeHtml(art.title)}</h3>` : ''}${art.imageSrc ? `<img src="${art.imageSrc}" alt="">` : ''}<div class="body-text">${art.bodyHtml}</div></div>`;
+  }
+
+  function currentMeta(){
+    return { name: nlName.value || 'Newsletter', issue: nlIssue.value || '', date: nlDate.value || '' };
+  }
+
+  function buildNewsletter(rawHtml){
+    const sections = processSections(parseStructure(rawHtml));
+    const meta = currentMeta();
+    lastProcessed = { meta, sections };
+    const html = renderFromModel(lastProcessed);
+    stageInner.innerHTML = `<div class="newsletter banner-${bannerStyleSel.value}">${html}</div>`;
+  }
+
+  downloadBtn.addEventListener('click', () => {
+    const newsletterEl = stageInner.querySelector('.newsletter');
+    if (!newsletterEl) return;
+    const styleTag = document.querySelector('style').outerHTML;
+    const overrideStyle = `<style>:root{
+      --font-display: ${FONT_STACKS.title[fontTitleSel.value]};
+      --font-body: ${FONT_STACKS.body[fontBodySel.value]};
+      --header-scale: ${headerSizeSel.value};
+      --body-scale: ${bodySizeSel.value};
+      --ink: ${colorInk.value};
+      --amber: ${colorAmber.value};
+      --paper: ${colorPaper.value};
+      --slate: ${colorSlate.value};
+    }</style>`;
+    const full = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${escapeHtml(nlName.value)} — ${escapeHtml(nlIssue.value)}</title>
+${styleTag}
+${overrideStyle}
+</head>
+<body style="background:var(--paper);padding:30px 0;">
+<div style="max-width:680px;margin:0 auto;">
+${newsletterEl.outerHTML}
+</div>
+</body>
+</html>`;
+    const blob = new Blob([full], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (nlName.value || 'newsletter').replace(/\s+/g,'-').toLowerCase() + '.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  downloadJsonBtn.addEventListener('click', () => {
+    if (!lastProcessed) return;
+    const payload = { meta: lastProcessed.meta, design: currentDesignTokens(), sections: lastProcessed.sections };
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (nlName.value || 'newsletter').replace(/\s+/g,'-').toLowerCase() + '-content.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+})();
+</script>
+</body>
+</html>

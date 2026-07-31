@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PEP SmartQC</title>
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <h1>PEP SmartQC</h1>
+  <p>Compare a Source and Output document for content changes — ignoring formatting and layout</p>
+</header>
+
+<div class="container">
+
+  <!-- Upload -->
+  <section class="panel">
+    <h2>1. Upload Documents</h2>
+    <div class="upload-grid">
+      <div class="upload-col">
+        <div class="upload-slot" id="sourceSlot">
+          <div class="slot-label">Source File</div>
+          <div class="file-icon">📄</div>
+          <div class="file-name">Drag & drop a file, or click to browse</div>
+          <div class="file-meta">DOCX, PPTX, PDF, or TXT</div>
+          <input type="file" id="sourceInput" accept=".docx,.pptx,.pdf,.txt" />
+        </div>
+        <div class="url-load-row">
+          <input type="text" id="sourceUrlInput" placeholder="or paste a file URL / SharePoint link…" />
+          <button id="sourceUrlFetchBtn" class="btn-secondary" type="button">Fetch</button>
+        </div>
+        <div class="url-status" id="sourceUrlStatus"></div>
+      </div>
+      <div class="upload-col">
+        <div class="upload-slot" id="outputSlot">
+          <div class="slot-label">Output File</div>
+          <div class="file-icon">📄</div>
+          <div class="file-name">Drag & drop a file, or click to browse</div>
+          <div class="file-meta">DOCX, PPTX, PDF, or TXT</div>
+          <input type="file" id="outputInput" accept=".docx,.pptx,.pdf,.txt" />
+        </div>
+        <div class="url-load-row">
+          <input type="text" id="outputUrlInput" placeholder="or paste a file URL / SharePoint link…" />
+          <button id="outputUrlFetchBtn" class="btn-secondary" type="button">Fetch</button>
+        </div>
+        <div class="url-status" id="outputUrlStatus"></div>
+      </div>
+    </div>
+    <div class="url-help">Works for direct, publicly-downloadable links or files hosted with permissive CORS. Authenticated corporate SharePoint/network links often can't be fetched this way by a browser for security reasons — if it fails, download the file locally and use the box above instead.</div>
+
+    <div class="actions-row">
+      <button id="compareBtn" class="btn-primary" disabled>Compare</button>
+      <button id="resetBtn" class="btn-secondary">Reset</button>
+      <button id="downloadBtn" class="btn-success" disabled>Download Excel Report</button>
+    </div>
+
+    <div class="progress-wrap hidden" id="progressWrap">
+      <div class="progress-label" id="progressLabel">Starting…</div>
+      <div class="progress-track"><div class="progress-fill" id="progressBarFill"></div></div>
+    </div>
+
+    <div class="error-box hidden" id="errorBox"></div>
+  </section>
+
+  <!-- Options -->
+  <section class="panel">
+    <h2>2. Comparison Options</h2>
+    <div class="options-grid">
+      <div class="option-item"><input type="checkbox" id="optIgnoreCase" checked><label for="optIgnoreCase">Ignore Case</label></div>
+      <div class="option-item"><input type="checkbox" id="optIgnoreSpaces" checked><label for="optIgnoreSpaces">Ignore Extra Spaces</label></div>
+      <div class="option-item"><input type="checkbox" id="optIgnoreBlankLines" checked><label for="optIgnoreBlankLines">Ignore Blank Lines</label></div>
+      <div class="option-item"><input type="checkbox" id="optIgnorePunctuation"><label for="optIgnorePunctuation">Ignore Punctuation</label></div>
+      <div class="option-item"><input type="checkbox" id="optIgnoreBullets" checked><label for="optIgnoreBullets">Ignore Bullet Symbols</label></div>
+      <div class="option-item"><input type="checkbox" id="optIgnoreHeaders"><label for="optIgnoreHeaders">Ignore Headers</label></div>
+      <div class="option-item"><input type="checkbox" id="optIgnoreFooters"><label for="optIgnoreFooters">Ignore Footers</label></div>
+      <div class="option-item"><input type="checkbox" id="optCompareNumbers" checked><label for="optCompareNumbers">Compare Numbers</label></div>
+      <div class="option-item"><input type="checkbox" id="optCompareDates" checked><label for="optCompareDates">Compare Dates</label></div>
+      <div class="option-item"><input type="checkbox" id="optCompareUrls" checked><label for="optCompareUrls">Compare URLs</label></div>
+      <div class="option-item"><input type="checkbox" id="optCompareEmails" checked><label for="optCompareEmails">Compare Email Addresses</label></div>
+    </div>
+  </section>
+
+  <!-- Design Settings -->
+  <section class="panel">
+    <div class="collapsible-header" id="themeToggle">
+      <h2>🎨 Design Settings</h2>
+      <svg class="chevron-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="collapsible-content hidden" id="themeContent">
+      <div class="theme-desc">Customize the look of this tool. Changes apply instantly and are remembered the next time you open it in this browser.</div>
+      <div class="theme-grid">
+        <div class="theme-section-label">Typography</div>
+        <div class="theme-item">
+          <label for="themeHeaderFont">Header Font</label>
+          <select id="themeHeaderFont">
+            <option value="system">System Default</option>
+            <option value="georgia">Georgia (Serif)</option>
+            <option value="playfair" data-google="Playfair+Display:wght@700;900">Playfair Display (Serif)</option>
+            <option value="times">Times New Roman</option>
+            <option value="trebuchet">Trebuchet MS</option>
+            <option value="verdana">Verdana</option>
+            <option value="courier">Courier New (Mono)</option>
+          </select>
+        </div>
+        <div class="theme-item">
+          <label for="themeBodyFont">Body Font</label>
+          <select id="themeBodyFont">
+            <option value="system">System Default</option>
+            <option value="arial">Arial / Helvetica</option>
+            <option value="georgia">Georgia (Serif)</option>
+            <option value="verdana">Verdana</option>
+            <option value="roboto" data-google="Roboto:wght@400;500;700">Roboto</option>
+            <option value="opensans" data-google="Open+Sans:wght@400;600">Open Sans</option>
+            <option value="courier">Courier New (Mono)</option>
+          </select>
+        </div>
+        <div class="theme-item">
+          <label for="themeFontColor">Font Color</label>
+          <input type="color" id="themeFontColor" value="#1f2937">
+        </div>
+
+        <div class="theme-section-label">Backgrounds</div>
+        <div class="theme-item">
+          <label for="themeBgColor">Page Background</label>
+          <input type="color" id="themeBgColor" value="#f4f6f9">
+        </div>
+        <div class="theme-item">
+          <label for="themeBannerColor">Section Banner Background</label>
+          <input type="color" id="themeBannerColor" value="#1e293b">
+        </div>
+        <div class="theme-item">
+          <label for="themeAccentColor">Primary Accent (buttons, links)</label>
+          <input type="color" id="themeAccentColor" value="#2563eb">
+        </div>
+
+        <div class="theme-section-label">KPI &amp; Chart Colors</div>
+        <div class="theme-item">
+          <label for="themeMatchColor">Matched</label>
+          <input type="color" id="themeMatchColor" value="#16a34a">
+        </div>
+        <div class="theme-item">
+          <label for="themeModifiedColor">Modified</label>
+          <input type="color" id="themeModifiedColor" value="#b45309">
+        </div>
+        <div class="theme-item">
+          <label for="themeMissingColor">Missing</label>
+          <input type="color" id="themeMissingColor" value="#dc2626">
+        </div>
+        <div class="theme-item">
+          <label for="themeAddedColor">Added</label>
+          <input type="color" id="themeAddedColor" value="#1d4ed8">
+        </div>
+      </div>
+      <div class="theme-actions">
+        <button id="themeResetBtn" class="btn-secondary" type="button">Reset to Defaults</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <section class="panel hidden" id="summaryWrap">
+    <h2>3. Comparison Summary</h2>
+    <div class="summary-grid" id="summaryGrid"></div>
+  </section>
+
+  <!-- Preview -->
+  <section class="panel hidden" id="previewWrap">
+    <h2>4. Changed Content Preview</h2>
+    <div class="preview-count" id="previewCount"></div>
+    <div class="table-wrap">
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th style="width:60px">ID</th>
+            <th style="width:140px">Section</th>
+            <th style="width:100px">Status</th>
+            <th>Source Text</th>
+            <th>Output Text</th>
+            <th style="width:180px">Comments</th>
+          </tr>
+        </thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="footer-note">Runs entirely in your browser. No files are uploaded to any server.</p>
+</div>
+
+<!-- Third-party libraries (static, bundled locally — no CDN/network calls) -->
+<script src="lib/JSZip.min.js"></script>
+<script src="lib/mammoth.min.js"></script>
+<script src="lib/pdf.min.js"></script>
+<script src="lib/exceljs.min.js"></script>
+
+<!-- App modules (order matters: each depends on the previous) -->
+<script src="js/utils.js"></script>
+<script src="js/normalizer.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/comparer.js"></script>
+<script src="js/report.js"></script>
+<script src="js/excel.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+DriveMatch Support FAQ
+
+Q: What is the minimum booking duration for local trips?
+A: The minimum local package is 3 hours at ₹300 plus ₹100 per additional hour.
+
+Q: What is the minimum outstation fare?
+A: The outstation minimum fare is ₹1,000.
+
+Q: How do I contact support?
+A: Email us at support@drivematch.example.com or call our helpline.
+
+This FAQ was last updated on 01-Jan-2026.
