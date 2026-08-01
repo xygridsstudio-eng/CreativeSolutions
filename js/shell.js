@@ -12,7 +12,6 @@
     dashboard: { src: 'apps/dashboard/index.html', title: 'Team Dashboard' },
     newsletter: { src: 'apps/newsletter/index.html', title: 'Newsletter Builder' },
     contentcheck: { src: 'apps/contentcheck/index.html', title: 'Content Check' },
-    formatcheck: { src: 'apps/formatcheck/index.html', title: 'Format Check' },
   };
   const DEFAULT_TOOL = 'dashboard';
   const DEFAULT_LOGO_SRC = 'assets/logo.svg';
