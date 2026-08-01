@@ -23,18 +23,21 @@
     --body-scale: 1;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;background:var(--paper);font-family:var(--font-body);color:var(--slate);}
+  html,body{margin:0;padding:0;background:var(--paper);font-family:var(--font-body);color:var(--slate);height:100%;}
+  body{display:flex;flex-direction:column;min-height:100vh;}
+
+  /* ---------- Page header (matches Content Check's app-header) ---------- */
+  .app-header{background:linear-gradient(135deg, var(--ink), var(--paper));color:#fff;padding:28px 24px;text-align:center;flex:none;}
+  .app-header h1{margin:0 0 4px;font-size:26px;font-weight:700;letter-spacing:-0.02em;font-family:var(--font-display);}
+  .app-header p{margin:0;color:#cbd5e1;font-size:14px;}
 
   /* ---------- Builder shell ---------- */
-  .shell{display:grid;grid-template-columns:320px 1fr;min-height:100vh;}
+  .shell{display:grid;grid-template-columns:320px 1fr;flex:1 1 auto;min-height:0;height:100%;}
   @media (max-width:900px){.shell{grid-template-columns:1fr;}}
 
-  .panel{background:var(--card);border-right:1px solid var(--line);padding:0;display:flex;flex-direction:column;height:100vh;position:sticky;top:0;}
-  .panel h1{font-family:var(--font-display);font-size:19px;margin:0;color:var(--heading);white-space:nowrap;}
-  .panel .sub{font-size:12.5px;color:var(--muted);margin:0;line-height:1.5;}
+  .panel{background:var(--card);border-right:1px solid var(--line);padding:0;display:flex;flex-direction:column;height:100%;}
 
   .panel-top{flex:none;padding:24px 22px 18px;background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 8px 12px -10px rgba(0,0,0,.35);position:relative;z-index:2;}
-  .panel-top .heading-row{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;}
   .panel-top .field:last-child{margin-bottom:0;}
   .panel-scroll{flex:1 1 auto;overflow-y:auto;padding:20px 22px 24px;}
 
@@ -159,14 +162,14 @@
 </head>
 <body>
 
+<header class="app-header">
+  <h1>Newsletter Builder</h1>
+  <p>Upload a Word doc. Heading&nbsp;1 starts a new section, Heading&nbsp;2 starts an article inside it. Name a heading with "spotlight", "profile", or "welcome" to get the profile-photo layout.</p>
+</header>
+
 <div class="shell">
   <div class="panel">
     <div class="panel-top">
-    <div class="heading-row">
-      <h1>Newsletter Builder</h1>
-      <p class="sub">Upload a Word doc. Heading&nbsp;1 starts a new section, Heading&nbsp;2 starts an article inside it. Name a heading with "spotlight", "profile", or "welcome" to get the profile-photo layout.</p>
-    </div>
-
     <div class="field">
       <label for="nlName">Newsletter name</label>
       <input type="text" id="nlName" value="The Signal">
