@@ -29,9 +29,13 @@
   .shell{display:grid;grid-template-columns:320px 1fr;min-height:100vh;}
   @media (max-width:900px){.shell{grid-template-columns:1fr;}}
 
-  .panel{background:var(--card);border-right:1px solid var(--line);padding:24px 22px;}
+  .panel{background:var(--card);border-right:1px solid var(--line);padding:0;display:flex;flex-direction:column;height:100vh;position:sticky;top:0;}
   .panel h1{font-family:var(--font-display);font-size:19px;margin:0 0 4px;color:var(--heading);}
   .panel .sub{font-size:12.5px;color:var(--muted);margin:0 0 22px;line-height:1.5;}
+
+  .panel-top{flex:none;padding:24px 22px 18px;background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 8px 12px -10px rgba(0,0,0,.35);position:relative;z-index:2;}
+  .panel-top .field:last-child{margin-bottom:0;}
+  .panel-scroll{flex:1 1 auto;overflow-y:auto;padding:20px 22px 24px;}
 
   .field{margin-bottom:16px;}
   .field label{display:block;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
@@ -156,6 +160,7 @@
 
 <div class="shell">
   <div class="panel">
+    <div class="panel-top">
     <h1>Newsletter Builder</h1>
     <p class="sub">Upload a Word doc. Heading&nbsp;1 starts a new section, Heading&nbsp;2 starts an article inside it. Name a heading with "spotlight", "profile", or "welcome" to get the profile-photo layout.</p>
 
@@ -171,6 +176,9 @@
       <label for="nlDate">Date</label>
       <input type="text" id="nlDate" value="">
     </div>
+    </div>
+
+    <div class="panel-scroll">
 
     <div class="design-block" id="designBlock">
       <div class="design-header" id="designHeader" role="button" tabindex="0" aria-expanded="true">
@@ -272,6 +280,7 @@
       • First image after a heading becomes that section's photo.<br>
       • Keep spotlight bios to a short first line (name) then the write-up — the first short line is used as the name.<br>
       • Everything runs in your browser; no file is uploaded anywhere.
+    </div>
     </div>
   </div>
 
