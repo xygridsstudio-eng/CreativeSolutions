@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Format Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Format Check</h1>
+  <p>Check a PowerPoint deck's font, color, spacing, and margins against your brand guidelines</p>
+</header>
+
+<div class="container">
+
+  <!-- Upload -->
+  <section class="panel">
+    <h2>1. Upload Deck</h2>
+    <div class="upload-slot" id="deckSlot">
+      <div class="file-icon">📊</div>
+      <div class="file-name" id="deckFileName">Drag & drop a .pptx file, or click to browse</div>
+      <div class="file-meta" id="deckFileMeta">PowerPoint (.pptx) only</div>
+      <input type="file" id="deckInput" accept=".pptx" />
+    </div>
+  </section>
+
+  <!-- Brand Guidelines -->
+  <section class="panel">
+    <div class="collapsible-header" id="guidelinesToggle">
+      <h2>2. Brand Guidelines</h2>
+      <svg class="chevron-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="collapsible-content hidden" id="guidelinesContent">
+      <div class="panel-desc">
+        Define the rules every slide will be checked against, or upload a previously saved guideline file.
+        These are remembered in this browser for next time.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-item span-2">
+          <label for="gName">Guideline Name</label>
+          <input type="text" id="gName" placeholder="e.g. Acme Corp Brand Kit" />
+        </div>
+
+        <div class="section-label">Typography</div>
+        <div class="form-item span-2">
+          <label>Allowed Fonts</label>
+          <div class="chip-input-row">
+            <input type="text" id="gFontInput" placeholder="Type a font name and press Enter" />
+            <button type="button" class="btn-secondary" id="gFontAddBtn">Add</button>
+          </div>
+          <div class="chip-list" id="gFontList"></div>
+        </div>
+        <div class="form-item span-2">
+          <label>Allowed Font Sizes (pt)</label>
+          <div class="chip-input-row">
+            <input type="number" id="gSizeInput" placeholder="e.g. 18" min="1" step="0.5" />
+            <button type="button" class="btn-secondary" id="gSizeAddBtn">Add</button>
+          </div>
+          <div class="chip-list" id="gSizeList"></div>
+        </div>
+        <div class="form-item">
+          <label for="gMinBody">Minimum Body Text Size (pt)</label>
+          <input type="number" id="gMinBody" min="1" step="0.5" />
+        </div>
+
+        <div class="section-label">Color Palette</div>
+        <div class="form-item span-2">
+          <label>Allowed Colors</label>
+          <div class="swatch-input-row">
+            <input type="color" id="gColorInput" value="#4FD1C5" />
+            <input type="text" id="gColorHexInput" placeholder="#4FD1C5" style="max-width:110px" />
+            <button type="button" class="btn-secondary" id="gColorAddBtn">Add</button>
+          </div>
+          <div class="swatch-list" id="gColorList"></div>
+        </div>
+
+        <div class="section-label">Line &amp; Paragraph Spacing</div>
+        <div class="form-item">
+          <label for="gLineTarget">Target Line Spacing (%)</label>
+          <input type="number" id="gLineTarget" min="0" step="1" />
+        </div>
+        <div class="form-item">
+          <label for="gLineTol">Line Spacing Tolerance (±%)</label>
+          <input type="number" id="gLineTol" min="0" step="1" />
+        </div>
+        <div class="form-item">
+          <label for="gSpaceBefore">Paragraph Space Before (pt)</label>
+          <input type="number" id="gSpaceBefore" min="0" step="0.5" />
+        </div>
+        <div class="form-item">
+          <label for="gSpaceAfter">Paragraph Space After (pt)</label>
+          <input type="number" id="gSpaceAfter" min="0" step="0.5" />
+        </div>
+        <div class="form-item">
+          <label for="gSpaceTol">Spacing Tolerance (±pt)</label>
+          <input type="number" id="gSpaceTol" min="0" step="0.5" />
+        </div>
+
+        <div class="section-label">Shape Internal Margins</div>
+        <div class="form-item">
+          <label for="gMarginL">Left (in)</label>
+          <input type="number" id="gMarginL" min="0" step="0.01" />
+        </div>
+        <div class="form-item">
+          <label for="gMarginT">Top (in)</label>
+          <input type="number" id="gMarginT" min="0" step="0.01" />
+        </div>
+        <div class="form-item">
+          <label for="gMarginR">Right (in)</label>
+          <input type="number" id="gMarginR" min="0" step="0.01" />
+        </div>
+        <div class="form-item">
+          <label for="gMarginB">Bottom (in)</label>
+          <input type="number" id="gMarginB" min="0" step="0.01" />
+        </div>
+        <div class="form-item">
+          <label for="gMarginTol">Margin Tolerance (±in)</label>
+          <input type="number" id="gMarginTol" min="0" step="0.01" />
+        </div>
+
+        <div class="section-label">Checks to Run</div>
+        <div class="form-item span-2">
+          <div class="check-toggles">
+            <div class="check-item"><input type="checkbox" id="cFont"><label for="cFont">Font</label></div>
+            <div class="check-item"><input type="checkbox" id="cFontSize"><label for="cFontSize">Font Size</label></div>
+            <div class="check-item"><input type="checkbox" id="cTextColor"><label for="cTextColor">Text Color</label></div>
+            <div class="check-item"><input type="checkbox" id="cShapeFill"><label for="cShapeFill">Shape Fill Color</label></div>
+            <div class="check-item"><input type="checkbox" id="cLineSpacing"><label for="cLineSpacing">Line Spacing</label></div>
+            <div class="check-item"><input type="checkbox" id="cParaSpacing"><label for="cParaSpacing">Bullet/Paragraph Spacing</label></div>
+            <div class="check-item"><input type="checkbox" id="cMargins"><label for="cMargins">Shape Internal Margins</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button type="button" class="btn-primary" id="gSaveBtn">Save Guidelines</button>
+        <button type="button" class="btn-secondary" id="gExportBtn">Export as JSON</button>
+        <button type="button" class="btn-secondary" id="gImportBtn">Upload Guideline File</button>
+        <input type="file" id="gImportInput" accept="application/json" class="hidden" />
+        <button type="button" class="btn-danger" id="gResetBtn">Reset to Defaults</button>
+      </div>
+      <div class="form-hint" id="gSavedNote" style="margin-top:10px;"></div>
+    </div>
+  </section>
+
+  <!-- Run -->
+  <section class="panel">
+    <h2>3. Run Check</h2>
+    <div class="actions-row" style="margin-top:0;">
+      <button type="button" class="btn-primary" id="runBtn" disabled>Run Format Check</button>
+      <button type="button" class="btn-secondary" id="resetRunBtn">Reset</button>
+    </div>
+    <div class="progress-wrap hidden" id="progressWrap">
+      <div class="progress-label" id="progressLabel">Starting…</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+    <div class="error-box hidden" id="errorBox"></div>
+  </section>
+
+  <!-- Results -->
+  <section class="panel hidden" id="resultsPanel">
+    <h2>4. Results</h2>
+    <div class="score-row" id="scoreRow"></div>
+    <div class="category-row" id="categoryRow"></div>
+    <div class="actions-row" style="margin-top:0; margin-bottom:18px;">
+      <button type="button" class="btn-success" id="downloadBtn">Download Excel Report</button>
+    </div>
+    <div class="sections-wrap" id="sectionsWrap"></div>
+  </section>
+
+  <p class="footer-note">Runs entirely in your browser. No files are uploaded to any server.</p>
+</div>
+
+<script src="lib/JSZip.min.js"></script>
+<script src="lib/exceljs.min.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/guidelines.js"></script>
+<script src="js/checker.js"></script>
+<script src="js/excel.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

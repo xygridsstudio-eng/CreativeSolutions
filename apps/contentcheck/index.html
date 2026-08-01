@@ -3,13 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PEP SmartQC</title>
+<title>Content Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
 <header class="app-header">
-  <h1>PEP SmartQC</h1>
+  <h1>Content Check</h1>
   <p>Compare a Source and Output document for content changes — ignoring formatting and layout</p>
 </header>
 
@@ -95,6 +97,7 @@
         <div class="theme-item">
           <label for="themeHeaderFont">Header Font</label>
           <select id="themeHeaderFont">
+            <option value="spacegrotesk" data-google="Space+Grotesk:wght@500;600;700" selected>Space Grotesk</option>
             <option value="system">System Default</option>
             <option value="georgia">Georgia (Serif)</option>
             <option value="playfair" data-google="Playfair+Display:wght@700;900">Playfair Display (Serif)</option>
@@ -107,6 +110,7 @@
         <div class="theme-item">
           <label for="themeBodyFont">Body Font</label>
           <select id="themeBodyFont">
+            <option value="inter" data-google="Inter:wght@400;500;600" selected>Inter</option>
             <option value="system">System Default</option>
             <option value="arial">Arial / Helvetica</option>
             <option value="georgia">Georgia (Serif)</option>
@@ -118,39 +122,39 @@
         </div>
         <div class="theme-item">
           <label for="themeFontColor">Font Color</label>
-          <input type="color" id="themeFontColor" value="#1f2937">
+          <input type="color" id="themeFontColor" value="#E7ECF2">
         </div>
 
         <div class="theme-section-label">Backgrounds</div>
         <div class="theme-item">
           <label for="themeBgColor">Page Background</label>
-          <input type="color" id="themeBgColor" value="#f4f6f9">
+          <input type="color" id="themeBgColor" value="#0A0E13">
         </div>
         <div class="theme-item">
           <label for="themeBannerColor">Section Banner Background</label>
-          <input type="color" id="themeBannerColor" value="#1e293b">
+          <input type="color" id="themeBannerColor" value="#171F2A">
         </div>
         <div class="theme-item">
           <label for="themeAccentColor">Primary Accent (buttons, links)</label>
-          <input type="color" id="themeAccentColor" value="#2563eb">
+          <input type="color" id="themeAccentColor" value="#4FD1C5">
         </div>
 
         <div class="theme-section-label">KPI &amp; Chart Colors</div>
         <div class="theme-item">
           <label for="themeMatchColor">Matched</label>
-          <input type="color" id="themeMatchColor" value="#16a34a">
+          <input type="color" id="themeMatchColor" value="#4FD1C5">
         </div>
         <div class="theme-item">
           <label for="themeModifiedColor">Modified</label>
-          <input type="color" id="themeModifiedColor" value="#b45309">
+          <input type="color" id="themeModifiedColor" value="#F2A93B">
         </div>
         <div class="theme-item">
           <label for="themeMissingColor">Missing</label>
-          <input type="color" id="themeMissingColor" value="#dc2626">
+          <input type="color" id="themeMissingColor" value="#EF6461">
         </div>
         <div class="theme-item">
           <label for="themeAddedColor">Added</label>
-          <input type="color" id="themeAddedColor" value="#1d4ed8">
+          <input type="color" id="themeAddedColor" value="#7C93F2">
         </div>
       </div>
       <div class="theme-actions">

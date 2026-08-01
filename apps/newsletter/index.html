@@ -2,20 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>The Signal — Newsletter Builder</title>
+<title>Newsletter Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#17233D;
+    --ink:#171F2A;
     --ink-2: color-mix(in srgb, var(--ink) 85%, white);
-    --paper:#F0F2F6;
-    --card:#FFFFFF;
-    --amber:#E0A542;
-    --amber-deep: color-mix(in srgb, var(--amber) 62%, black);
-    --slate:#2B3446;
-    --muted:#69707F;
-    --line:#DCE0E7;
-    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
-    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --heading:#E7ECF2;
+    --paper:#0A0E13;
+    --card:#121821;
+    --amber:#F2A93B;
+    --amber-deep: color-mix(in srgb, var(--amber) 85%, white);
+    --slate:#C7CDD9;
+    --muted:#8592A6;
+    --line:#232E3B;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
     --header-scale: 1;
     --body-scale: 1;
   }
@@ -27,48 +30,48 @@
   @media (max-width:900px){.shell{grid-template-columns:1fr;}}
 
   .panel{background:var(--card);border-right:1px solid var(--line);padding:24px 22px;}
-  .panel h1{font-family:var(--font-display);font-size:19px;margin:0 0 4px;color:var(--ink);}
+  .panel h1{font-family:var(--font-display);font-size:19px;margin:0 0 4px;color:var(--heading);}
   .panel .sub{font-size:12.5px;color:var(--muted);margin:0 0 22px;line-height:1.5;}
 
   .field{margin-bottom:16px;}
   .field label{display:block;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
-  .field input[type=text]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;font-size:13.5px;font-family:var(--font-body);color:var(--slate);background:#fff;}
+  .field input[type=text]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;font-size:13.5px;font-family:var(--font-body);color:var(--slate);background:var(--card);}
   .field input[type=text]:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:var(--amber);}
-  .field select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;color:var(--slate);background:#fff;}
+  .field select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;color:var(--slate);background:var(--card);}
   .field select:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:var(--amber);}
 
   .design-block{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0 18px;margin-bottom:18px;}
   .design-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;margin-bottom:12px;}
-  .design-header .design-title{font-family:var(--font-display);font-size:14px;color:var(--ink);margin:0;}
+  .design-header .design-title{font-family:var(--font-display);font-size:14px;color:var(--heading);margin:0;}
   .design-header .chevron{color:var(--muted);font-size:11px;transition:transform .15s ease;}
   .design-block.collapsed .design-header{margin-bottom:0;}
   .design-block.collapsed .design-header .chevron{transform:rotate(-90deg);}
   .design-block.collapsed .design-content{display:none;}
   .swatch-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
   .swatch-row span{font-size:12.5px;color:var(--slate);}
-  .swatch-row input[type=color]{width:38px;height:28px;border:1px solid var(--line);border-radius:6px;padding:2px;cursor:pointer;background:#fff;}
+  .swatch-row input[type=color]{width:38px;height:28px;border:1px solid var(--line);border-radius:6px;padding:2px;cursor:pointer;background:var(--card);}
   .reset-link{background:none;border:none;padding:0;font-size:11.5px;color:var(--muted);text-decoration:underline;cursor:pointer;width:auto;margin-top:2px;}
-  .reset-link:hover{color:var(--ink);}
+  .reset-link:hover{color:var(--heading);}
 
   .dropzone{border:1.5px dashed var(--line);border-radius:10px;padding:22px 14px;text-align:center;cursor:pointer;transition:border-color .15s, background .15s;}
-  .dropzone:hover, .dropzone.drag{border-color:var(--amber);background:#FBF6EC;}
+  .dropzone:hover, .dropzone.drag{border-color:var(--amber);background:color-mix(in srgb, var(--amber) 12%, var(--paper));}
   .dropzone .pulse{width:34px;height:34px;border-radius:50%;background:var(--amber);margin:0 auto 10px;position:relative;}
   .dropzone .pulse::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid var(--amber);opacity:.5;}
   .dropzone p{margin:0;font-size:13px;color:var(--slate);font-weight:600;}
   .dropzone span{display:block;margin-top:4px;font-size:11.5px;color:var(--muted);}
-  .filename{margin-top:10px;font-size:12.5px;color:var(--ink);background:var(--paper);border-radius:6px;padding:6px 9px;word-break:break-all;}
+  .filename{margin-top:10px;font-size:12.5px;color:var(--heading);background:var(--paper);border-radius:6px;padding:6px 9px;word-break:break-all;}
 
   button.primary, button.secondary{width:100%;padding:11px;border-radius:7px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:8px;border:none;font-family:var(--font-body);}
   button.primary{background:var(--ink);color:#fff;}
-  button.primary:disabled{background:#B7BDC9;cursor:not-allowed;}
+  button.primary:disabled{background:var(--line);cursor:not-allowed;}
   button.primary:hover:not(:disabled){background:var(--ink-2);}
-  button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line);}
-  button.secondary:hover:not(:disabled){border-color:var(--ink);}
+  button.secondary{background:var(--card);color:var(--heading);border:1px solid var(--line);}
+  button.secondary:hover:not(:disabled){border-color:var(--heading);}
   button.secondary:disabled{color:#B7BDC9;border-color:var(--line);cursor:not-allowed;}
 
   .status{font-size:12px;color:var(--muted);margin-top:10px;min-height:16px;}
-  .status.err{color:#B4403A;}
-  .status.ok{color:#2E7D53;}
+  .status.err{color:#EF6461;}
+  .status.ok{color:#4FD1C5;}
 
   .hint{font-size:11.5px;color:var(--muted);line-height:1.6;border-top:1px solid var(--line);margin-top:22px;padding-top:16px;}
   .hint b{color:var(--slate);}
@@ -79,7 +82,7 @@
   .empty{max-width:420px;margin:80px auto;text-align:center;color:var(--muted);}
   .empty .ring{width:52px;height:52px;border-radius:50%;border:2px solid var(--amber);margin:0 auto 18px;position:relative;}
   .empty .ring::before{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--amber);}
-  .empty h2{font-family:var(--font-display);color:var(--ink);font-size:19px;margin:0 0 8px;}
+  .empty h2{font-family:var(--font-display);color:var(--heading);font-size:19px;margin:0 0 8px;}
   .empty p{font-size:13.5px;line-height:1.6;margin:0;}
 
   /* ---------- Newsletter template ---------- */
@@ -91,7 +94,7 @@
   .masthead .rule{height:3px;background:var(--amber);width:56px;margin-top:14px;}
 
   .lead{padding:34px 30px 8px;}
-  .lead h2{font-family:var(--font-display);font-size:calc(27px * var(--header-scale));line-height:1.25;color:var(--ink);margin:0 0 14px;}
+  .lead h2{font-family:var(--font-display);font-size:calc(27px * var(--header-scale));line-height:1.25;color:var(--heading);margin:0 0 14px;}
   .lead img{width:100%;border-radius:4px;display:block;margin-bottom:16px;}
   .lead .body-text{font-size:calc(15px * var(--body-scale));line-height:1.7;color:var(--slate);}
   .lead .body-text p{margin:0 0 14px;}
@@ -110,7 +113,7 @@
   /* Underline Heading: larger editorial title with a short accent rule beneath */
   .banner-underline .divider{display:block;margin:40px 30px 6px;}
   .banner-underline .divider .node, .banner-underline .divider .line{display:none;}
-  .banner-underline .divider .label{display:inline-block;color:var(--ink);text-transform:none;letter-spacing:.01em;font-size:calc(19px * var(--header-scale));padding-bottom:9px;border-bottom:3px solid var(--amber);}
+  .banner-underline .divider .label{display:inline-block;color:var(--heading);text-transform:none;letter-spacing:.01em;font-size:calc(19px * var(--header-scale));padding-bottom:9px;border-bottom:3px solid var(--amber);}
 
   /* Ribbon Tag: flag-shaped label with a hairline continuing across the row */
   .banner-ribbon .divider{display:flex;align-items:center;gap:0;margin:40px 0 4px;}
@@ -124,7 +127,7 @@
   .intro-text img{max-width:100%;border-radius:4px;margin:6px 0 14px;}
 
   .article{background:var(--paper);border-radius:8px;padding:18px 20px;margin-bottom:16px;}
-  .article h3{font-family:var(--font-display);font-size:calc(17px * var(--header-scale));color:var(--ink);margin:0 0 8px;}
+  .article h3{font-family:var(--font-display);font-size:calc(17px * var(--header-scale));color:var(--heading);margin:0 0 8px;}
   .article img{width:100%;border-radius:5px;margin:2px 0 12px;display:block;}
   .article .body-text{font-size:calc(13.8px * var(--body-scale));line-height:1.68;color:var(--slate);}
   .article .body-text p{margin:0 0 10px;}
@@ -153,7 +156,7 @@
 
 <div class="shell">
   <div class="panel">
-    <h1>The Signal — Builder</h1>
+    <h1>Newsletter Builder</h1>
     <p class="sub">Upload a Word doc. Heading&nbsp;1 starts a new section, Heading&nbsp;2 starts an article inside it. Name a heading with "spotlight", "profile", or "welcome" to get the profile-photo layout.</p>
 
     <div class="field">
@@ -179,6 +182,7 @@
       <div class="field">
         <label for="fontTitle">Title &amp; headings font</label>
         <select id="fontTitle">
+          <option value="spaceGrotesk">Space Grotesk</option>
           <option value="editorialSerif">Editorial Serif (Georgia)</option>
           <option value="classicSerif">Classic Serif (Times)</option>
           <option value="modernSans">Modern Sans (Helvetica)</option>
@@ -191,6 +195,7 @@
       <div class="field">
         <label for="fontBody">Body &amp; bullets font</label>
         <select id="fontBody">
+          <option value="inter">Inter</option>
           <option value="systemSans">System Sans</option>
           <option value="classicSerif">Classic Serif</option>
           <option value="verdana">Verdana Clean</option>
@@ -230,19 +235,19 @@
 
       <div class="swatch-row">
         <span>Header &amp; heading color</span>
-        <input type="color" id="colorInk" value="#17233D">
+        <input type="color" id="colorInk" value="#171F2A">
       </div>
       <div class="swatch-row">
         <span>Accent / highlight color</span>
-        <input type="color" id="colorAmber" value="#e0a542">
+        <input type="color" id="colorAmber" value="#F2A93B">
       </div>
       <div class="swatch-row">
         <span>Background &amp; card tint</span>
-        <input type="color" id="colorPaper" value="#f0f2f6">
+        <input type="color" id="colorPaper" value="#0A0E13">
       </div>
       <div class="swatch-row">
         <span>Body text color</span>
-        <input type="color" id="colorSlate" value="#2b3446">
+        <input type="color" id="colorSlate" value="#C7CDD9">
       </div>
 
       <button class="reset-link" id="resetDesignBtn">Reset to default design</button>
@@ -322,6 +327,7 @@
 
   const FONT_STACKS = {
     title: {
+      spaceGrotesk: "'Space Grotesk', sans-serif",
       editorialSerif: "Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif",
       classicSerif: "'Times New Roman', Times, serif",
       modernSans: "'Helvetica Neue', Helvetica, Arial, sans-serif",
@@ -330,6 +336,7 @@
       monospace: "'Courier New', Courier, monospace"
     },
     body: {
+      inter: "'Inter', sans-serif",
       systemSans: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
       classicSerif: "Georgia, 'Times New Roman', serif",
       verdana: "Verdana, Geneva, sans-serif",
@@ -338,9 +345,9 @@
   };
 
   const DEFAULT_DESIGN = {
-    fontTitle: 'editorialSerif', fontBody: 'systemSans',
+    fontTitle: 'spaceGrotesk', fontBody: 'inter',
     headerSize: '1', bodySize: '1', bannerStyle: 'dot',
-    ink: '#17233d', amber: '#e0a542', paper: '#f0f2f6', slate: '#2b3446'
+    ink: '#171f2a', amber: '#f2a93b', paper: '#0a0e13', slate: '#c7cdd9'
   };
 
   function applyDesign(){
