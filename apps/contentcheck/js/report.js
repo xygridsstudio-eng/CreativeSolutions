@@ -31,17 +31,33 @@
       }
     });
 
-    tableRows.forEach((row) => {
-      if (row.status === 'missing') missingContent.push({ ...row, sentenceNumber: null, comments: 'Table row removed' });
-      if (row.status === 'added') addedContent.push({ ...row, sentenceNumber: null, comments: 'Table row added' });
-      if (row.status === 'modified') modifiedContent.push({ ...row, sentenceNumber: null, comments: 'Table row modified' });
+    const tableRowsWithComments = tableRows.map((row) => ({
+      ...row,
+      sentenceNumber: null,
+      comments: row.status === 'missing' ? 'Table row removed'
+        : row.status === 'added' ? 'Table row added'
+        : row.status === 'modified' ? 'Table row modified'
+        : '',
+    }));
+
+    tableRowsWithComments.forEach((row) => {
+      if (row.status === 'missing') missingContent.push(row);
+      if (row.status === 'added') addedContent.push(row);
+      if (row.status === 'modified') modifiedContent.push(row);
     });
+
+    // Sentence-level and table-level changes are computed separately (they
+    // go through different alignment logic), but the on-screen preview
+    // needs one combined, chronological-by-blockId list so table changes
+    // are actually visible there instead of only in the Excel report.
+    const previewRows = detailRows.concat(tableRowsWithComments).sort((a, b) => a.blockId - b.blockId);
 
     return {
       meta,
       stats,
       detailRows,
       tableRows,
+      previewRows,
       missingContent,
       addedContent,
       modifiedContent,

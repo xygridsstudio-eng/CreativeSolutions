@@ -289,12 +289,12 @@
   }
 
   function renderPreview(report) {
-    const interesting = report.detailRows.filter((r) => r.status !== 'match').slice(0, 200);
-    const rows = interesting.length ? interesting : report.detailRows.slice(0, 50);
+    const interesting = report.previewRows.filter((r) => r.status !== 'match').slice(0, 200);
+    const rows = interesting.length ? interesting : report.previewRows.slice(0, 50);
 
     el('previewCount').textContent = interesting.length
-      ? `Showing ${rows.length} of ${interesting.length} changed sentences (full detail in the Excel report)`
-      : `No differences found — showing first ${rows.length} matched sentences`;
+      ? `Showing ${rows.length} of ${interesting.length} changed items (full detail in the Excel report)`
+      : `No differences found — showing first ${rows.length} matched items`;
 
     el('previewBody').innerHTML = rows.map((r) => `
       <tr class="row-${r.status}">

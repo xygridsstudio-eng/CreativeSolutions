@@ -454,8 +454,8 @@
             slide: activeSection.slide,
             tableId: t.tableId,
             status: t.status,
-            sourceText: t.srcRow ? t.srcRow.text : '',
-            outputText: t.outRow ? t.outRow.text : '',
+            sourceText: t.srcRow ? t.srcRow.originalText : '',
+            outputText: t.outRow ? t.outRow.originalText : '',
             cellDiffs: t.cellDiffs,
           });
           if (t.status === 'match') stats.matched += 1;
