@@ -52,6 +52,14 @@
     </div>
     <div class="url-help">Works for direct, publicly-downloadable links or files hosted with permissive CORS. Authenticated corporate SharePoint/network links often can't be fetched this way by a browser for security reasons — if it fails, download the file locally and use the box above instead.</div>
 
+    <div class="backend-toggle-row">
+      <label class="backend-toggle">
+        <input type="checkbox" id="useBackendParsing">
+        <span>Use enhanced parsing (better PDF tables &amp; PPTX diagrams)</span>
+      </label>
+      <div class="backend-toggle-note">Off by default — everything runs in your browser with no upload. Turning this on sends both files to a parsing server for this comparison only; nothing is stored there.</div>
+    </div>
+
     <div class="actions-row">
       <button id="compareBtn" class="btn-primary" disabled>Compare</button>
       <button id="resetBtn" class="btn-secondary">Reset</button>

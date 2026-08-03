@@ -28,10 +28,39 @@
 
   const U = global.CCUtils;
 
+  // Opt-in only — see the "Use enhanced parsing" toggle in index.html.
+  // Content Check works fully offline without this; it's only used when a
+  // user explicitly asks for it, since it means uploading files to a server.
+  const BACKEND_URL = 'https://content-check-backend.onrender.com';
+
+  async function parseFileViaBackend(file) {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+
+    let response;
+    try {
+      response = await fetch(`${BACKEND_URL}/parse`, { method: 'POST', body: formData });
+    } catch (e) {
+      throw new Error(
+        `Could not reach the enhanced parsing server. It may be waking up from sleep (free hosting spins down ` +
+        `when idle) — wait a moment and try again, or turn off "Use enhanced parsing" to parse locally instead.`
+      );
+    }
+    if (!response.ok) {
+      let detail = '';
+      try { detail = (await response.json()).detail || ''; } catch (e) { /* response wasn't JSON */ }
+      throw new Error(`Enhanced parsing failed for ${file.name}: ${detail || response.statusText}`);
+    }
+    return response.json();
+  }
+
   // ---------------------------------------------------------------------
   // Entry point
   // ---------------------------------------------------------------------
-  async function parseFile(file) {
+  async function parseFile(file, options) {
+    if (options && options.useBackend) {
+      return parseFileViaBackend(file);
+    }
     const ext = U.fileExtension(file.name);
     switch (ext) {
       case 'docx':

@@ -9,3 +9,14 @@ services:
       - path: /*
         name: Cache-Control
         value: no-cache
+
+  # Opt-in enhanced parsing backend for Content Check (apps/contentcheck).
+  # Only called when a user explicitly enables the "enhanced parsing"
+  # toggle in the UI — Content Check works fully offline without this.
+  - type: web
+    name: content-check-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT

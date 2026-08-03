@@ -7,8 +7,10 @@ browser-only tools behind one shared left-hand navigation:
 - **Newsletter Builder** ("The Signal") — converts a Word doc into a styled HTML newsletter
 - **Content Check** ("PEP SmartQC") — sentence-level document comparison with an Excel diff report
 
-No installation, no build step, no backend. Extract the ZIP and open
-`index.html`.
+No installation, no build step, no backend required. Extract the ZIP and
+open `index.html`. Content Check has one optional, off-by-default
+"enhanced parsing" toggle backed by a small Python service — see
+[Optional: enhanced parsing backend](#optional-enhanced-parsing-backend).
 
 ---
 
@@ -93,6 +95,31 @@ each tool, not just the shared sidebar), that's a reasonable follow-up —
 just say the word.
 
 ---
+
+## Optional: enhanced parsing backend
+
+`backend/` is a small FastAPI service (`python-pptx` / `python-docx` /
+`pdfplumber`) that Content Check can optionally send files to for more
+robust parsing — better PDF table detection and PowerPoint SmartArt
+support than the in-browser JS parser can manage. It is entirely
+opt-in: Content Check works fully offline by default, and this service
+is only called when a user explicitly checks "Use enhanced parsing" in
+the Upload panel, which clearly discloses that doing so uploads the
+files to a server. No uploaded content is stored — files are parsed in
+memory and discarded once the response is sent.
+
+Deployed as a second free-tier Render service via the root `render.yaml`
+(`content-check-backend`, pointing `apps/contentcheck/js/parser.js`'s
+`BACKEND_URL` at its `.onrender.com` URL). Free-tier web services spin
+down after 15 minutes idle, so the first request after a quiet period
+takes ~30-50s to wake up — the toggle's help text mentions this.
+
+To run it locally:
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app:app --reload --port 8900
+```
 
 ## Adding another tool later
 

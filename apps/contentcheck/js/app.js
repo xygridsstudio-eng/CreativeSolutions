@@ -19,13 +19,14 @@
     window.CCUi.hidePreview();
     window.CCUi.showProgress('Reading files…');
 
+    const parseOptions = { useBackend: window.CCUi.useBackendParsing() };
     const t0 = performance.now();
     try {
       window.CCUi.setProgress(10, `Extracting content from ${sourceFile.name}…`);
-      const srcRaw = await window.CCParser.parseFile(sourceFile);
+      const srcRaw = await window.CCParser.parseFile(sourceFile, parseOptions);
 
       window.CCUi.setProgress(35, `Extracting content from ${outputFile.name}…`);
-      const outRaw = await window.CCParser.parseFile(outputFile);
+      const outRaw = await window.CCParser.parseFile(outputFile, parseOptions);
 
       window.CCUi.setProgress(55, 'Normalizing content…');
       const srcDoc = window.CCNormalizer.buildHierarchy(srcRaw, options);

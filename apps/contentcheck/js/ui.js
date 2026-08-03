@@ -216,6 +216,10 @@
     return { sourceFile: state.sourceFile, outputFile: state.outputFile };
   }
 
+  function useBackendParsing() {
+    return el('useBackendParsing').checked;
+  }
+
   function reset() {
     state.sourceFile = null;
     state.outputFile = null;
@@ -372,6 +376,7 @@
   global.CCUi = {
     init,
     getFiles,
+    useBackendParsing,
     reset,
     showProgress,
     setProgress,
