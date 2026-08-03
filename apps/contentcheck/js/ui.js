@@ -182,12 +182,26 @@
     wireUrlFetch('source', handleSourceFile);
     wireUrlFetch('output', handleOutputFile);
 
-    el('compareBtn').addEventListener('click', () => onCompare(getOptions()));
+    el('compareBtn').addEventListener('click', () => onCompare({}));
     el('resetBtn').addEventListener('click', () => {
       reset();
       onReset();
     });
     el('downloadBtn').addEventListener('click', onDownload);
+
+    // Delegated on the container (not per-header) since preview groups are
+    // re-rendered wholesale on every comparison run.
+    el('previewGroups').addEventListener('click', (e) => {
+      const header = e.target.closest('.preview-group-header');
+      if (header) toggleGroup(header);
+    });
+    el('previewGroups').addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const header = e.target.closest('.preview-group-header');
+      if (!header) return;
+      e.preventDefault();
+      toggleGroup(header);
+    });
 
     renderFileSlot(el('sourceSlot'), null);
     renderFileSlot(el('outputSlot'), null);
@@ -196,22 +210,6 @@
 
   function updateCompareButton() {
     el('compareBtn').disabled = !(state.sourceFile && state.outputFile);
-  }
-
-  function getOptions() {
-    return {
-      ignoreCase: el('optIgnoreCase').checked,
-      ignoreExtraSpaces: el('optIgnoreSpaces').checked,
-      ignoreBlankLines: el('optIgnoreBlankLines').checked,
-      ignorePunctuation: el('optIgnorePunctuation').checked,
-      ignoreBulletSymbols: el('optIgnoreBullets').checked,
-      ignoreHeaders: el('optIgnoreHeaders').checked,
-      ignoreFooters: el('optIgnoreFooters').checked,
-      compareNumbers: el('optCompareNumbers').checked,
-      compareDates: el('optCompareDates').checked,
-      compareUrls: el('optCompareUrls').checked,
-      compareEmails: el('optCompareEmails').checked,
-    };
   }
 
   function getFiles() {
@@ -288,30 +286,91 @@
     el('previewWrap').classList.add('hidden');
   }
 
+  /** Group rows by section, preserving order of first appearance. */
+  function groupRowsBySection(rows) {
+    const order = [];
+    const map = new Map();
+    rows.forEach((r) => {
+      const key = r.section || '(No section)';
+      if (!map.has(key)) {
+        map.set(key, []);
+        order.push(key);
+      }
+      map.get(key).push(r);
+    });
+    return order.map((key) => ({ section: key, rows: map.get(key) }));
+  }
+
+  function countsByStatus(rows) {
+    const counts = { match: 0, modified: 0, missing: 0, added: 0 };
+    rows.forEach((r) => { if (counts[r.status] != null) counts[r.status] += 1; });
+    return counts;
+  }
+
   function renderPreview(report) {
     const interesting = report.previewRows.filter((r) => r.status !== 'match').slice(0, 200);
     const rows = interesting.length ? interesting : report.previewRows.slice(0, 50);
 
     el('previewCount').textContent = interesting.length
-      ? `Showing ${rows.length} of ${interesting.length} changed items (full detail in the Excel report)`
+      ? `Showing ${rows.length} of ${interesting.length} changed items, grouped by section — click a section to expand (full detail in the Excel report)`
       : `No differences found — showing first ${rows.length} matched items`;
 
-    el('previewBody').innerHTML = rows.map((r) => `
-      <tr class="row-${r.status}">
-        <td>${r.blockId}</td>
-        <td>${global.CCUtils.escapeHtml(r.section || '')}</td>
-        <td><span class="badge badge-${r.status}">${STATUS_LABELS[r.status] || r.status}</span></td>
-        <td>${global.CCUtils.escapeHtml((r.sourceText || '').slice(0, 160))}</td>
-        <td>${global.CCUtils.escapeHtml((r.outputText || '').slice(0, 160))}</td>
-        <td>${global.CCUtils.escapeHtml(r.comments || '')}</td>
-      </tr>
-    `).join('');
+    const groups = groupRowsBySection(rows);
+
+    el('previewGroups').innerHTML = groups.map((g) => {
+      const counts = countsByStatus(g.rows);
+      const countBadges = ['modified', 'missing', 'added', 'match']
+        .filter((key) => counts[key])
+        .map((key) => `<span class="badge badge-${key}">${counts[key]} ${STATUS_LABELS[key]}</span>`)
+        .join('');
+      const rowsHtml = g.rows.map((r) => `
+        <tr class="row-${r.status}">
+          <td style="width:56px">${r.blockId}</td>
+          <td style="width:90px"><span class="badge badge-${r.status}">${STATUS_LABELS[r.status] || r.status}</span></td>
+          <td>${global.CCUtils.escapeHtml((r.sourceText || '').slice(0, 160))}</td>
+          <td>${global.CCUtils.escapeHtml((r.outputText || '').slice(0, 160))}</td>
+          <td style="width:160px">${global.CCUtils.escapeHtml(r.comments || '')}</td>
+        </tr>
+      `).join('');
+      return `
+        <div class="preview-group">
+          <div class="preview-group-header" role="button" tabindex="0" aria-expanded="false">
+            <span class="preview-group-chevron">▸</span>
+            <span class="preview-group-title">${global.CCUtils.escapeHtml(g.section)}</span>
+            <span class="preview-group-counts">${countBadges}</span>
+          </div>
+          <div class="preview-group-body">
+            <div class="table-wrap">
+              <table class="preview-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>Source Text</th>
+                    <th>Output Text</th>
+                    <th>Comments</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHtml}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
     el('previewWrap').classList.remove('hidden');
+  }
+
+  function toggleGroup(header) {
+    const body = header.nextElementSibling;
+    const open = header.classList.toggle('open');
+    body.classList.toggle('open', open);
+    header.setAttribute('aria-expanded', String(open));
   }
 
   global.CCUi = {
     init,
-    getOptions,
     getFiles,
     reset,
     showProgress,

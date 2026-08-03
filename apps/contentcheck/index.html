@@ -66,49 +66,17 @@
     <div class="error-box hidden" id="errorBox"></div>
   </section>
 
-  <!-- Options -->
-  <section class="panel">
-    <h2>2. Comparison Options</h2>
-    <div class="options-grid">
-      <div class="option-item"><input type="checkbox" id="optIgnoreCase" checked><label for="optIgnoreCase">Ignore Case</label></div>
-      <div class="option-item"><input type="checkbox" id="optIgnoreSpaces" checked><label for="optIgnoreSpaces">Ignore Extra Spaces</label></div>
-      <div class="option-item"><input type="checkbox" id="optIgnoreBlankLines" checked><label for="optIgnoreBlankLines">Ignore Blank Lines</label></div>
-      <div class="option-item"><input type="checkbox" id="optIgnorePunctuation"><label for="optIgnorePunctuation">Ignore Punctuation</label></div>
-      <div class="option-item"><input type="checkbox" id="optIgnoreBullets" checked><label for="optIgnoreBullets">Ignore Bullet Symbols</label></div>
-      <div class="option-item"><input type="checkbox" id="optIgnoreHeaders"><label for="optIgnoreHeaders">Ignore Headers</label></div>
-      <div class="option-item"><input type="checkbox" id="optIgnoreFooters"><label for="optIgnoreFooters">Ignore Footers</label></div>
-      <div class="option-item"><input type="checkbox" id="optCompareNumbers" checked><label for="optCompareNumbers">Compare Numbers</label></div>
-      <div class="option-item"><input type="checkbox" id="optCompareDates" checked><label for="optCompareDates">Compare Dates</label></div>
-      <div class="option-item"><input type="checkbox" id="optCompareUrls" checked><label for="optCompareUrls">Compare URLs</label></div>
-      <div class="option-item"><input type="checkbox" id="optCompareEmails" checked><label for="optCompareEmails">Compare Email Addresses</label></div>
-    </div>
-  </section>
-
   <!-- Summary -->
   <section class="panel hidden" id="summaryWrap">
-    <h2>3. Comparison Summary</h2>
+    <h2>2. Comparison Summary</h2>
     <div class="summary-grid" id="summaryGrid"></div>
   </section>
 
   <!-- Preview -->
   <section class="panel hidden" id="previewWrap">
-    <h2>4. Changed Content Preview</h2>
+    <h2>3. Changed Content Preview</h2>
     <div class="preview-count" id="previewCount"></div>
-    <div class="table-wrap">
-      <table class="preview-table">
-        <thead>
-          <tr>
-            <th style="width:60px">ID</th>
-            <th style="width:140px">Section</th>
-            <th style="width:100px">Status</th>
-            <th>Source Text</th>
-            <th>Output Text</th>
-            <th style="width:180px">Comments</th>
-          </tr>
-        </thead>
-        <tbody id="previewBody"></tbody>
-      </table>
-    </div>
+    <div class="preview-groups" id="previewGroups"></div>
   </section>
 
   <p class="footer-note">Runs entirely in your browser. No files are uploaded to any server.</p>
