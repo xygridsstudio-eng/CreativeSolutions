@@ -163,6 +163,11 @@
         }
       });
 
+      // SmartArt diagrams live in a separate part referenced by graphicFrame,
+      // not inline as shape text — see extractDiagramTexts for why this matters.
+      const diagramTexts = await extractDiagramTexts(zip, slidePath, xml);
+      diagramTexts.forEach((text) => section.blocks.push({ type: 'list', text }));
+
       // Tables live in graphicFrame > tbl, not in <p:sp>.
       const tables = Array.from(xml.getElementsByTagNameNS('*', 'tbl'));
       tables.forEach((tbl) => {
@@ -211,6 +216,73 @@
 
   function collapseRuns(runs) {
     return runs.join('').replace(/\s+/g, ' ').trim();
+  }
+
+  const RELATIONSHIPS_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+  /** 'ppt/slides/slide1.xml' -> 'ppt/slides/_rels/slide1.xml.rels' */
+  function relsPathFor(partPath) {
+    const slash = partPath.lastIndexOf('/');
+    const dir = partPath.slice(0, slash);
+    const file = partPath.slice(slash + 1);
+    return `${dir}/_rels/${file}.rels`;
+  }
+
+  /** Resolve a relationship Target (e.g. '../diagrams/data1.xml') against the part that references it. */
+  function resolveRelPath(basePartPath, relTarget) {
+    if (/^[a-z]+:\/\//i.test(relTarget)) return null; // external target, not in the zip
+    const baseParts = basePartPath.split('/');
+    baseParts.pop(); // drop the file itself, keep its directory
+    relTarget.split('/').forEach((part) => {
+      if (part === '..') baseParts.pop();
+      else if (part && part !== '.') baseParts.push(part);
+    });
+    return baseParts.join('/');
+  }
+
+  /**
+   * SmartArt diagrams are NOT stored inline in the slide XML as <p:sp>
+   * shapes — the slide only holds a <p:graphicFrame> pointing (via a
+   * relationship id) to a separate ppt/diagrams/dataN.xml part that holds
+   * the actual text. Without this, any content redesigned into a SmartArt
+   * diagram silently disappears from parsing (extracted as nothing, not
+   * even reported as removed) rather than showing up as a real change.
+   */
+  async function extractDiagramTexts(zip, slidePath, xml) {
+    const relIds = Array.from(xml.getElementsByTagNameNS('*', 'graphicFrame'))
+      .map((gf) => gf.getElementsByTagNameNS('*', 'graphicData')[0])
+      .filter((gd) => gd && /diagram/i.test(gd.getAttribute('uri') || ''))
+      .map((gd) => gd.getElementsByTagNameNS('*', 'relIds')[0])
+      .filter(Boolean)
+      .map((el) => el.getAttributeNS(RELATIONSHIPS_NS, 'dm'))
+      .filter(Boolean);
+    if (!relIds.length) return [];
+
+    const relsPath = relsPathFor(slidePath);
+    if (!zip.files[relsPath]) return [];
+    const relsXml = new DOMParser().parseFromString(await zip.files[relsPath].async('text'), 'application/xml');
+    const targetById = new Map(
+      Array.from(relsXml.getElementsByTagNameNS('*', 'Relationship')).map((r) => [r.getAttribute('Id'), r.getAttribute('Target')])
+    );
+
+    const texts = [];
+    for (const relId of relIds) {
+      const target = targetById.get(relId);
+      const dataPath = target && resolveRelPath(slidePath, target);
+      if (!dataPath || !zip.files[dataPath]) continue;
+      const dataXml = new DOMParser().parseFromString(await zip.files[dataPath].async('text'), 'application/xml');
+      Array.from(dataXml.getElementsByTagNameNS('*', 'pt')).forEach((pt) => {
+        // Non-"node" points (parTrans/sibTrans/doc) are structural connectors
+        // with no real content, not actual diagram text.
+        const ptType = pt.getAttribute('type');
+        if (ptType && ptType !== 'node') return;
+        Array.from(pt.getElementsByTagNameNS('*', 'p'))
+          .map((p) => collapseRuns(Array.from(p.getElementsByTagNameNS('*', 't')).map((n) => n.textContent)))
+          .filter(Boolean)
+          .forEach((text) => texts.push(text));
+      });
+    }
+    return texts;
   }
 
   // ---------------------------------------------------------------------
