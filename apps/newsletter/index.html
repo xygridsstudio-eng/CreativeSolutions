@@ -31,6 +31,9 @@
   .app-header h1{margin:0 0 4px;font-size:26px;font-weight:700;letter-spacing:-0.02em;font-family:var(--font-display);}
   .app-header p{margin:0;color:#cbd5e1;font-size:14px;}
 
+  /* ---------- Coming soon ---------- */
+  .coming-soon{flex:1 1 auto;display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--font-display);font-size:28px;font-weight:600;color:var(--heading);}
+
   /* ---------- Builder shell ---------- */
   .shell{display:grid;grid-template-columns:320px 1fr;flex:1 1 auto;min-height:0;height:100%;}
   @media (max-width:900px){.shell{grid-template-columns:1fr;}}
@@ -164,10 +167,12 @@
 
 <header class="app-header">
   <h1>Newsletter Builder</h1>
-  <p>Upload a Word doc. Heading&nbsp;1 starts a new section, Heading&nbsp;2 starts an article inside it. Name a heading with "spotlight", "profile", or "welcome" to get the profile-photo layout.</p>
+  <p>Convert a Word doc into a styled, downloadable HTML newsletter.</p>
 </header>
 
-<div class="shell">
+<div class="coming-soon">Coming Soon</div>
+
+<div class="shell" style="display:none">
   <div class="panel">
     <div class="panel-top">
     <div class="field">

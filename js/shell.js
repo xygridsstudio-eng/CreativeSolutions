@@ -9,12 +9,12 @@
   'use strict';
 
   const TOOLS = {
+    contentcheck: { src: 'apps/contentcheck/index.html', title: 'Content Check' },
     dashboard: { src: 'apps/dashboard/index.html', title: 'Team Dashboard' },
     newsletter: { src: 'apps/newsletter/index.html', title: 'Newsletter Builder' },
-    contentcheck: { src: 'apps/contentcheck/index.html', title: 'Content Check' },
     about: { src: 'apps/about/index.html', title: 'About & How to Use' },
   };
-  const DEFAULT_TOOL = 'dashboard';
+  const DEFAULT_TOOL = 'contentcheck';
   const DEFAULT_LOGO_SRC = 'assets/logo.svg';
   const STORAGE_KEY = 'cs_suite_state_v1';
   const LOGO_STORAGE_KEY = 'cs_suite_logo_v1';
