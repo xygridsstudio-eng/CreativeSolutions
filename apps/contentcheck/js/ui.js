@@ -61,79 +61,6 @@
     });
   }
 
-  function wireCollapsible(headerId, contentId, startOpen) {
-    const header = el(headerId);
-    const content = el(contentId);
-    if (!header || !content) return;
-    const setOpen = (open) => {
-      header.classList.toggle('open', open);
-      content.classList.toggle('hidden', !open);
-    };
-    setOpen(!!startOpen);
-    header.addEventListener('click', () => setOpen(content.classList.contains('hidden')));
-  }
-
-  const THEME_FIELD_IDS = {
-    headerFont: 'themeHeaderFont',
-    bodyFont: 'themeBodyFont',
-    fontColor: 'themeFontColor',
-    bgColor: 'themeBgColor',
-    bannerColor: 'themeBannerColor',
-    accentColor: 'themeAccentColor',
-    matchColor: 'themeMatchColor',
-    modifiedColor: 'themeModifiedColor',
-    missingColor: 'themeMissingColor',
-    addedColor: 'themeAddedColor',
-  };
-
-  function readThemeFromControls() {
-    const theme = {};
-    Object.keys(THEME_FIELD_IDS).forEach((key) => {
-      theme[key] = el(THEME_FIELD_IDS[key]).value;
-    });
-    return theme;
-  }
-
-  function writeThemeToControls(theme) {
-    Object.keys(THEME_FIELD_IDS).forEach((key) => {
-      el(THEME_FIELD_IDS[key]).value = theme[key];
-    });
-  }
-
-  function loadFontsForTheme(theme) {
-    ['themeHeaderFont', 'themeBodyFont'].forEach((id) => {
-      const select = el(id);
-      const opt = select.options[select.selectedIndex];
-      if (opt && opt.dataset.google) global.CCTheme.loadGoogleFont(opt.dataset.google);
-    });
-  }
-
-  function initThemePanel() {
-    wireCollapsible('themeToggle', 'themeContent', false);
-
-    const saved = global.CCTheme.load();
-    writeThemeToControls(saved);
-    global.CCTheme.applyTheme(saved);
-    loadFontsForTheme(saved);
-
-    const onChange = () => {
-      const theme = readThemeFromControls();
-      loadFontsForTheme(theme);
-      global.CCTheme.applyTheme(theme);
-      global.CCTheme.save(theme);
-    };
-    Object.values(THEME_FIELD_IDS).forEach((id) => {
-      el(id).addEventListener('input', onChange);
-      el(id).addEventListener('change', onChange);
-    });
-
-    el('themeResetBtn').addEventListener('click', () => {
-      writeThemeToControls(global.CCTheme.DEFAULTS);
-      global.CCTheme.applyTheme(global.CCTheme.DEFAULTS);
-      global.CCTheme.clear();
-    });
-  }
-
   const SUPPORTED_EXTENSIONS = ['docx', 'pptx', 'pdf', 'txt'];
   const URL_STORAGE_KEY = 'contentcheck_last_urls_v1';
 
@@ -254,7 +181,6 @@
     wireUploadSlot('outputSlot', 'outputInput', handleOutputFile);
     wireUrlFetch('source', handleSourceFile);
     wireUrlFetch('output', handleOutputFile);
-    initThemePanel();
 
     el('compareBtn').addEventListener('click', () => onCompare(getOptions()));
     el('resetBtn').addEventListener('click', () => {

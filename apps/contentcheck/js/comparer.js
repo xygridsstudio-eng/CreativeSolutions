@@ -274,6 +274,22 @@
     return results;
   }
 
+  // parser.js numbers tableId globally across the whole document, so if a
+  // table is added/removed anywhere earlier in either file, every table
+  // after it drifts out of sync between source and output even when the
+  // table itself, in an otherwise-matched section, is unchanged — causing
+  // every row (header included) to show as missing+added instead of a
+  // match. Re-key tables to their order of appearance within THIS section
+  // only, so pairing survives table-count drift elsewhere in the document.
+  function localizeTableIds(paras) {
+    const map = new Map();
+    return paras.map((p) => {
+      const orig = p.tableId || 'table';
+      if (!map.has(orig)) map.set(orig, `t${map.size}`);
+      return Object.assign({}, p, { tableId: map.get(orig) });
+    });
+  }
+
   function diffCells(srcCells, outCells) {
     const len = Math.max(srcCells.length, outCells.length);
     const diffs = [];
@@ -425,8 +441,8 @@
       });
 
       // Tables within this section.
-      const srcTableParas = srcSection.paragraphs.filter((p) => p.type === 'tableRow');
-      const outTableParas = outSection.paragraphs.filter((p) => p.type === 'tableRow');
+      const srcTableParas = localizeTableIds(srcSection.paragraphs.filter((p) => p.type === 'tableRow'));
+      const outTableParas = localizeTableIds(outSection.paragraphs.filter((p) => p.type === 'tableRow'));
       if (srcTableParas.length || outTableParas.length) {
         const tDiffs = compareTables(srcTableParas, outTableParas);
         tDiffs.forEach((t) => {

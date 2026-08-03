@@ -139,16 +139,27 @@
             return /title|ctrTitle/i.test(t);
           });
 
-        const textRuns = Array.from(sp.getElementsByTagNameNS('*', 't')).map((n) => n.textContent);
-        const text = collapseRuns(textRuns);
-        if (!text) return;
+        // Each <a:p> is one paragraph/bullet line. Extracting text per-paragraph
+        // (rather than joining every <a:t> run in the whole shape into one
+        // string) keeps separate bullets as separate blocks — joining them
+        // used to glue unrelated lines together, e.g. "VF" + "XYZ" + "XYZ"
+        // becoming "VFXYZXYZ", which could then never match the corresponding
+        // lines in the other document.
+        const paraTexts = Array.from(sp.getElementsByTagNameNS('*', 'p'))
+          .map((p) => collapseRuns(Array.from(p.getElementsByTagNameNS('*', 't')).map((n) => n.textContent)))
+          .filter(Boolean);
+        if (!paraTexts.length) return;
 
         if (isTitlePlaceholder && !titleFound) {
+          // A slide title is one semantic unit even if it wraps across
+          // multiple paragraphs, so join them instead of splitting them.
+          const text = paraTexts.join(' ');
           section.title = text;
           titleFound = true;
           section.blocks.push({ type: 'heading', text });
         } else {
-          section.blocks.push({ type: 'paragraph', text });
+          const type = paraTexts.length > 1 ? 'list' : 'paragraph';
+          paraTexts.forEach((text) => section.blocks.push({ type, text }));
         }
       });
 
@@ -179,11 +190,11 @@
             const t = ph.getAttribute('type') || '';
             return /body|undefined|^$/i.test(t) || !t;
           });
-          const textRuns = Array.from(sp.getElementsByTagNameNS('*', 't')).map((n) => n.textContent);
-          const text = collapseRuns(textRuns);
-          if (text && isBody) {
-            section.blocks.push({ type: 'notes', text });
-          }
+          if (!isBody) return;
+          const paraTexts = Array.from(sp.getElementsByTagNameNS('*', 'p'))
+            .map((p) => collapseRuns(Array.from(p.getElementsByTagNameNS('*', 't')).map((n) => n.textContent)))
+            .filter(Boolean);
+          paraTexts.forEach((text) => section.blocks.push({ type: 'notes', text }));
         });
       }
 

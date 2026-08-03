@@ -84,85 +84,6 @@
     </div>
   </section>
 
-  <!-- Design Settings -->
-  <section class="panel">
-    <div class="collapsible-header" id="themeToggle">
-      <h2>🎨 Design Settings</h2>
-      <svg class="chevron-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div class="collapsible-content hidden" id="themeContent">
-      <div class="theme-desc">Customize the look of this tool. Changes apply instantly and are remembered the next time you open it in this browser.</div>
-      <div class="theme-grid">
-        <div class="theme-section-label">Typography</div>
-        <div class="theme-item">
-          <label for="themeHeaderFont">Header Font</label>
-          <select id="themeHeaderFont">
-            <option value="spacegrotesk" data-google="Space+Grotesk:wght@500;600;700" selected>Space Grotesk</option>
-            <option value="system">System Default</option>
-            <option value="georgia">Georgia (Serif)</option>
-            <option value="playfair" data-google="Playfair+Display:wght@700;900">Playfair Display (Serif)</option>
-            <option value="times">Times New Roman</option>
-            <option value="trebuchet">Trebuchet MS</option>
-            <option value="verdana">Verdana</option>
-            <option value="courier">Courier New (Mono)</option>
-          </select>
-        </div>
-        <div class="theme-item">
-          <label for="themeBodyFont">Body Font</label>
-          <select id="themeBodyFont">
-            <option value="inter" data-google="Inter:wght@400;500;600" selected>Inter</option>
-            <option value="system">System Default</option>
-            <option value="arial">Arial / Helvetica</option>
-            <option value="georgia">Georgia (Serif)</option>
-            <option value="verdana">Verdana</option>
-            <option value="roboto" data-google="Roboto:wght@400;500;700">Roboto</option>
-            <option value="opensans" data-google="Open+Sans:wght@400;600">Open Sans</option>
-            <option value="courier">Courier New (Mono)</option>
-          </select>
-        </div>
-        <div class="theme-item">
-          <label for="themeFontColor">Font Color</label>
-          <input type="color" id="themeFontColor" value="#E7ECF2">
-        </div>
-
-        <div class="theme-section-label">Backgrounds</div>
-        <div class="theme-item">
-          <label for="themeBgColor">Page Background</label>
-          <input type="color" id="themeBgColor" value="#0A0E13">
-        </div>
-        <div class="theme-item">
-          <label for="themeBannerColor">Section Banner Background</label>
-          <input type="color" id="themeBannerColor" value="#171F2A">
-        </div>
-        <div class="theme-item">
-          <label for="themeAccentColor">Primary Accent (buttons, links)</label>
-          <input type="color" id="themeAccentColor" value="#4FD1C5">
-        </div>
-
-        <div class="theme-section-label">KPI &amp; Chart Colors</div>
-        <div class="theme-item">
-          <label for="themeMatchColor">Matched</label>
-          <input type="color" id="themeMatchColor" value="#4FD1C5">
-        </div>
-        <div class="theme-item">
-          <label for="themeModifiedColor">Modified</label>
-          <input type="color" id="themeModifiedColor" value="#F2A93B">
-        </div>
-        <div class="theme-item">
-          <label for="themeMissingColor">Missing</label>
-          <input type="color" id="themeMissingColor" value="#EF6461">
-        </div>
-        <div class="theme-item">
-          <label for="themeAddedColor">Added</label>
-          <input type="color" id="themeAddedColor" value="#7C93F2">
-        </div>
-      </div>
-      <div class="theme-actions">
-        <button id="themeResetBtn" class="btn-secondary" type="button">Reset to Defaults</button>
-      </div>
-    </div>
-  </section>
-
   <!-- Summary -->
   <section class="panel hidden" id="summaryWrap">
     <h2>3. Comparison Summary</h2>
@@ -206,7 +127,6 @@
 <script src="js/comparer.js"></script>
 <script src="js/report.js"></script>
 <script src="js/excel.js"></script>
-<script src="js/theme.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/app.js"></script>
 </body>
