@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: creative-solutions-suite
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
