@@ -228,6 +228,15 @@ tr.row-modified { background: var(--yellow-bg); }
 tr.row-missing { background: var(--red-bg); }
 tr.row-added { background: var(--blue-bg); }
 
+.diff-equal { color: var(--text-muted); }
+.diff-removed, .diff-added {
+  padding: 0 3px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+.diff-removed { background: var(--red-bg); color: var(--red); text-decoration: line-through; }
+.diff-added { background: var(--green-bg); color: var(--green); }
+
 .preview-groups { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 .preview-group { border-bottom: 1px solid var(--border); }
 .preview-group:last-child { border-bottom: none; }

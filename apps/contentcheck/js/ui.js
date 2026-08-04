@@ -311,6 +311,31 @@
     return counts;
   }
 
+  function renderDiffTokens(tokens) {
+    return tokens.map((t) => {
+      const text = global.CCUtils.escapeHtml(t.text);
+      if (t.type === 'equal') return `<span class="diff-equal">${text}</span>`;
+      return `<mark class="diff-${t.type}">${text}</mark>`;
+    }).join(' ');
+  }
+
+  /**
+   * Source/Output cell HTML for one preview row. A "modified" row shows a
+   * word-level diff (unchanged words muted, changed words highlighted) so
+   * the specific change stands out instead of two full, mostly-identical
+   * sentences sitting side by side. Missing/added rows have no counterpart
+   * to diff against, so they just show the plain (truncated) text.
+   */
+  function renderRowCells(r) {
+    if (r.status !== 'modified') {
+      const src = global.CCUtils.escapeHtml((r.sourceText || '').slice(0, 160));
+      const out = global.CCUtils.escapeHtml((r.outputText || '').slice(0, 160));
+      return [src, out];
+    }
+    const { srcTokens, outTokens } = global.CCUtils.diffWords(r.sourceText || '', r.outputText || '');
+    return [renderDiffTokens(srcTokens), renderDiffTokens(outTokens)];
+  }
+
   function renderPreview(report) {
     const interesting = report.previewRows.filter((r) => r.status !== 'match').slice(0, 200);
     const rows = interesting.length ? interesting : report.previewRows.slice(0, 50);
@@ -327,15 +352,18 @@
         .filter((key) => counts[key])
         .map((key) => `<span class="badge badge-${key}">${counts[key]} ${STATUS_LABELS[key]}</span>`)
         .join('');
-      const rowsHtml = g.rows.map((r) => `
+      const rowsHtml = g.rows.map((r) => {
+        const [srcCell, outCell] = renderRowCells(r);
+        return `
         <tr class="row-${r.status}">
           <td style="width:56px">${r.blockId}</td>
           <td style="width:90px"><span class="badge badge-${r.status}">${STATUS_LABELS[r.status] || r.status}</span></td>
-          <td>${global.CCUtils.escapeHtml((r.sourceText || '').slice(0, 160))}</td>
-          <td>${global.CCUtils.escapeHtml((r.outputText || '').slice(0, 160))}</td>
+          <td>${srcCell}</td>
+          <td>${outCell}</td>
           <td style="width:160px">${global.CCUtils.escapeHtml(r.comments || '')}</td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
       return `
         <div class="preview-group">
           <div class="preview-group-header" role="button" tabindex="0" aria-expanded="false">

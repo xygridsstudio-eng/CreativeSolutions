@@ -147,6 +147,55 @@
     return lev * 0.6 + lcs * 0.4;
   }
 
+  /**
+   * Word-level diff between two strings, so a "modified" row can show just
+   * the words that actually changed instead of two full, mostly-identical
+   * sentences. Unlike lcsLength (space-optimized, length only), this keeps
+   * the full DP table so it can backtrack an actual alignment.
+   * Returns { srcTokens, outTokens }, each an array of
+   * { type: 'equal'|'removed'|'added', text } covering every word on that
+   * side, in original order.
+   */
+  function diffWords(a, b) {
+    const ta = tokenize(a);
+    const tb = tokenize(b);
+    const n = ta.length;
+    const m = tb.length;
+
+    const dp = new Array(n + 1);
+    for (let i = 0; i <= n; i++) dp[i] = new Array(m + 1).fill(0);
+    for (let i = 1; i <= n; i++) {
+      for (let j = 1; j <= m; j++) {
+        dp[i][j] = ta[i - 1] === tb[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+
+    const srcTokens = [];
+    const outTokens = [];
+    let i = n;
+    let j = m;
+    while (i > 0 && j > 0) {
+      if (ta[i - 1] === tb[j - 1]) {
+        srcTokens.push({ type: 'equal', text: ta[i - 1] });
+        outTokens.push({ type: 'equal', text: tb[j - 1] });
+        i -= 1;
+        j -= 1;
+      } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+        srcTokens.push({ type: 'removed', text: ta[i - 1] });
+        i -= 1;
+      } else {
+        outTokens.push({ type: 'added', text: tb[j - 1] });
+        j -= 1;
+      }
+    }
+    while (i > 0) { srcTokens.push({ type: 'removed', text: ta[i - 1] }); i -= 1; }
+    while (j > 0) { outTokens.push({ type: 'added', text: tb[j - 1] }); j -= 1; }
+
+    srcTokens.reverse();
+    outTokens.reverse();
+    return { srcTokens, outTokens };
+  }
+
   // ---------------------------------------------------------------------
   // Misc helpers
   // ---------------------------------------------------------------------
@@ -269,6 +318,7 @@
     lcsLength,
     lcsSimilarity,
     combinedSimilarity,
+    diffWords,
     tokenize,
     escapeHtml,
     formatBytes,
