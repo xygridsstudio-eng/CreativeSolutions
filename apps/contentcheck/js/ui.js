@@ -61,110 +61,6 @@
     });
   }
 
-  const SUPPORTED_EXTENSIONS = ['docx', 'pptx', 'pdf', 'txt'];
-  const URL_STORAGE_KEY = 'contentcheck_last_urls_v1';
-
-  function loadLastUrls() {
-    try {
-      const raw = localStorage.getItem(URL_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
-  function saveLastUrl(prefix, url) {
-    try {
-      const all = loadLastUrls();
-      all[prefix] = url;
-      localStorage.setItem(URL_STORAGE_KEY, JSON.stringify(all));
-    } catch (e) { /* ignore — remembering the path is a convenience, not required */ }
-  }
-
-  function filenameFromContentDisposition(header) {
-    if (!header) return null;
-    const starMatch = /filename\*=(?:UTF-8'')?([^;]+)/i.exec(header);
-    if (starMatch) {
-      try { return decodeURIComponent(starMatch[1].replace(/["']/g, '').trim()); } catch (e) { /* fall through */ }
-    }
-    const plainMatch = /filename="?([^";]+)"?/i.exec(header);
-    return plainMatch ? plainMatch[1].trim() : null;
-  }
-
-  function filenameFromUrl(url) {
-    try {
-      const u = new URL(url, window.location.href);
-      const last = decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() || '');
-      return last || null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function setUrlStatus(statusId, text, kind) {
-    const el2 = el(statusId);
-    el2.textContent = text;
-    el2.className = `url-status${kind ? ` ${kind}` : ''}`;
-  }
-
-  function wireUrlFetch(prefix, onFileSelected) {
-    const input = el(`${prefix}UrlInput`);
-    const btn = el(`${prefix}UrlFetchBtn`);
-    const statusId = `${prefix}UrlStatus`;
-
-    const saved = loadLastUrls();
-    if (saved[prefix]) input.value = saved[prefix];
-
-    const doFetch = async () => {
-      const url = input.value.trim();
-      if (!url) return;
-      saveLastUrl(prefix, url);
-
-      btn.disabled = true;
-      setUrlStatus(statusId, 'Fetching…', 'pending');
-      try {
-        const response = await fetch(url, { mode: 'cors' });
-        if (!response.ok) throw new Error(`Server responded with ${response.status} ${response.statusText}`);
-
-        const blob = await response.blob();
-        const cd = response.headers.get('content-disposition');
-        const filename = filenameFromContentDisposition(cd) || filenameFromUrl(url) || 'downloaded-file';
-        const ext = global.CCUtils.fileExtension(filename);
-
-        if (!SUPPORTED_EXTENSIONS.includes(ext)) {
-          const e = new Error(
-            `That link resolved to "${filename}", which isn't a supported file type. ` +
-            `Supported: DOCX, PPTX, PDF, TXT.`
-          );
-          e.isValidationError = true;
-          throw e;
-        }
-
-        const file = new File([blob], filename, { type: blob.type });
-        onFileSelected(file);
-        setUrlStatus(statusId, `Loaded "${filename}" (${formatBytes(file.size)})`, 'ok');
-      } catch (err) {
-        if (err && err.isValidationError) {
-          setUrlStatus(statusId, err.message, 'err');
-        } else {
-          setUrlStatus(
-            statusId,
-            `Couldn't fetch that link (${err && err.message ? err.message : err}). This is often a CORS or ` +
-            `authentication restriction on corporate SharePoint/network links — download the file locally and ` +
-            `use the box above instead.`,
-            'err'
-          );
-        }
-      } finally {
-        btn.disabled = false;
-      }
-    };
-
-    btn.addEventListener('click', doFetch);
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); doFetch(); }
-    });
-  }
-
   function init({ onCompare, onReset, onDownload }) {
     const handleSourceFile = (file) => {
       state.sourceFile = file;
@@ -179,8 +75,6 @@
 
     wireUploadSlot('sourceSlot', 'sourceInput', handleSourceFile);
     wireUploadSlot('outputSlot', 'outputInput', handleOutputFile);
-    wireUrlFetch('source', handleSourceFile);
-    wireUrlFetch('output', handleOutputFile);
 
     el('compareBtn').addEventListener('click', () => onCompare({}));
     el('resetBtn').addEventListener('click', () => {
@@ -227,8 +121,6 @@
     el('outputInput').value = '';
     renderFileSlot(el('sourceSlot'), null);
     renderFileSlot(el('outputSlot'), null);
-    setUrlStatus('sourceUrlStatus', '', '');
-    setUrlStatus('outputUrlStatus', '', '');
     updateCompareButton();
     hideProgress();
     hideSummary();

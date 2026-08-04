@@ -111,26 +111,6 @@ body {
 .upload-slot.has-file { border-style: solid; border-color: var(--primary); background: var(--primary-soft); }
 .upload-slot input[type=file] { display: none; }
 
-.url-load-row { display: flex; gap: 8px; }
-.url-load-row input[type=text] {
-  flex: 1;
-  min-width: 0;
-  font-family: inherit;
-  font-size: 13px;
-  padding: 9px 11px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  background: var(--surface);
-}
-.url-load-row input[type=text]:focus { outline: none; border-color: var(--primary); }
-.url-load-row button { padding: 9px 14px; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
-.url-status { font-size: 12px; min-height: 16px; }
-.url-status.ok { color: var(--green); }
-.url-status.err { color: var(--red); }
-.url-status.pending { color: var(--text-muted); }
-.url-help { font-size: 12px; color: var(--text-muted); margin-top: 12px; line-height: 1.5; }
-
 .backend-toggle-row { margin-top: 14px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
 .backend-toggle { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
 .backend-toggle input { width: 16px; height: 16px; accent-color: var(--primary); }

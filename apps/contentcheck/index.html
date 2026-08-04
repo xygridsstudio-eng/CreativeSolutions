@@ -29,11 +29,6 @@
           <div class="file-meta">DOCX, PPTX, PDF, or TXT</div>
           <input type="file" id="sourceInput" accept=".docx,.pptx,.pdf,.txt" />
         </div>
-        <div class="url-load-row">
-          <input type="text" id="sourceUrlInput" placeholder="or paste a file URL / SharePoint link…" />
-          <button id="sourceUrlFetchBtn" class="btn-secondary" type="button">Fetch</button>
-        </div>
-        <div class="url-status" id="sourceUrlStatus"></div>
       </div>
       <div class="upload-col">
         <div class="upload-slot" id="outputSlot">
@@ -43,14 +38,8 @@
           <div class="file-meta">DOCX, PPTX, PDF, or TXT</div>
           <input type="file" id="outputInput" accept=".docx,.pptx,.pdf,.txt" />
         </div>
-        <div class="url-load-row">
-          <input type="text" id="outputUrlInput" placeholder="or paste a file URL / SharePoint link…" />
-          <button id="outputUrlFetchBtn" class="btn-secondary" type="button">Fetch</button>
-        </div>
-        <div class="url-status" id="outputUrlStatus"></div>
       </div>
     </div>
-    <div class="url-help">Works for direct, publicly-downloadable links or files hosted with permissive CORS. Authenticated corporate SharePoint/network links often can't be fetched this way by a browser for security reasons — if it fails, download the file locally and use the box above instead.</div>
 
     <div class="backend-toggle-row">
       <label class="backend-toggle">
