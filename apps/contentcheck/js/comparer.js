@@ -393,7 +393,10 @@
         srcSection.paragraphs.forEach((p) => {
           stats.totalParagraphs += 1;
           if (p.type === 'tableRow') return; // handled in table pass below
-          p.sentences.forEach((s) => pushDetail('missing', srcSection, p, null, s, null, {}, 'Entire section removed'));
+          // One row for the whole paragraph, not one per sentence — a wholly
+          // missing paragraph is a single removed line, not N separate
+          // "missing" items just because it happens to contain N sentences.
+          pushDetail('missing', srcSection, p, null, null, null, {}, 'Entire section removed');
         });
         return;
       }
@@ -401,7 +404,7 @@
         outSection.paragraphs.forEach((p) => {
           stats.totalParagraphs += 1;
           if (p.type === 'tableRow') return;
-          p.sentences.forEach((s) => pushDetail('added', outSection, null, p, null, s, {}, 'Entire section added'));
+          pushDetail('added', outSection, null, p, null, null, {}, 'Entire section added');
         });
         return;
       }
@@ -428,9 +431,11 @@
             pushDetail('match', activeSection, srcPara, outPara, s, outPara.sentences[idx] || s, {}, '');
           });
         } else if (pOp.type === 'delete') {
-          srcPara.sentences.forEach((s) => pushDetail('missing', activeSection, srcPara, null, s, null, {}, ''));
+          // Same reasoning as the section-level delete/insert above: one row
+          // for the whole missing paragraph, not one per sentence in it.
+          pushDetail('missing', activeSection, srcPara, null, null, null, {}, '');
         } else if (pOp.type === 'insert') {
-          outPara.sentences.forEach((s) => pushDetail('added', activeSection, null, outPara, null, s, {}, ''));
+          pushDetail('added', activeSection, null, outPara, null, null, {}, '');
         } else {
           const sentenceDiffs = compareSentences(srcPara, outPara, options);
           sentenceDiffs.forEach((sd) => {
