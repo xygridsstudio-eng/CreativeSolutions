@@ -6,6 +6,7 @@ from pptx import Presentation
 
 NS = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+    "c": "http://schemas.openxmlformats.org/drawingml/2006/chart",
     "dgm": "http://schemas.openxmlformats.org/drawingml/2006/diagram",
     "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
 }
@@ -65,39 +66,53 @@ def _extract_diagram_texts(shape) -> list[str]:
     return texts
 
 
-def _extract_chart_texts(chart) -> list[str]:
-    """Unlike SmartArt, python-pptx has a proper Chart API — no need to hand
-    -walk the chart XML part. Without this, edits to a chart's underlying
-    numbers (the whole point of a chart) are completely invisible to the
-    comparison, same gap that existed in the JS parser before
-    extractChartTexts was added there.
+def _chart_points_by_idx(container) -> dict:
+    """idx -> raw <c:v> text, exactly as cached in the chart XML. Reading
+    the text verbatim (rather than going through python-pptx's Series.values,
+    which parses each cached value into a Python float) means a decimal like
+    "4.4" is preserved exactly instead of being round-tripped through float
+    parsing/re-serialization, which can surface binary floating-point
+    artifacts (e.g. 4.4000000000000004) that were never in the source file.
     """
+    points = {}
+    if container is None:
+        return points
+    for pt in container.iter(f"{{{NS['c']}}}pt"):
+        idx = pt.get("idx")
+        v = pt.find(f"{{{NS['c']}}}v")
+        if idx is not None and v is not None and v.text:
+            points[idx] = v.text.strip()
+    return points
+
+
+def _extract_chart_texts(chart) -> list[str]:
+    """Chart title + one line per series, read straight from the chart's raw
+    XML (chart._chartSpace) rather than python-pptx's Chart API — see
+    _chart_points_by_idx for why. Without this at all, edits to a chart's
+    underlying numbers (the whole point of a chart) would be completely
+    invisible to the comparison, same gap that existed in the JS parser
+    before extractChartTexts was added there.
+    """
+    chart_space = chart._chartSpace
     texts = []
-    if chart.has_title and chart.chart_title.text_frame is not None:
-        title = _collapse(chart.chart_title.text_frame.text)
+
+    title_el = chart_space.find(f".//{{{NS['c']}}}title")
+    if title_el is not None:
+        title = _collapse("".join(t.text or "" for t in title_el.iter(f"{{{NS['a']}}}t")))
         if title:
             texts.append(f"Chart title: {title}")
 
-    try:
-        categories = [str(c) for c in list(chart.plots[0].categories)] if chart.plots else []
-    except (IndexError, ValueError):
-        categories = []
+    for ser in chart_space.iter(f"{{{NS['c']}}}ser"):
+        tx_el = ser.find(f"{{{NS['c']}}}tx")
+        name_v = tx_el.find(f".//{{{NS['c']}}}v") if tx_el is not None else None
+        series_name = name_v.text.strip() if name_v is not None and name_v.text else ""
 
-    def fmt_value(v):
-        if v is None:
-            return ""
-        # python-pptx always hands back floats; the JS parser reads the raw
-        # cached string from the chart XML (e.g. "5000", not "5000.0") — match
-        # that so the same chart parses to identical text via either path.
-        return str(int(v)) if float(v).is_integer() else str(v)
+        categories = _chart_points_by_idx(ser.find(f"{{{NS['c']}}}cat"))
+        values = _chart_points_by_idx(ser.find(f"{{{NS['c']}}}val"))
+        idxs = sorted(set(categories) | set(values), key=int)
+        pairs = [f"{categories.get(idx, f'#{idx}')}: {values.get(idx, '')}" for idx in idxs]
 
-    for series in chart.series:
-        pairs = [
-            f"{categories[i] if i < len(categories) else f'#{i}'}: {fmt_value(v)}"
-            for i, v in enumerate(series.values)
-        ]
-        line = (f"{series.name} — " if series.name else "") + ", ".join(pairs)
-        line = line.strip()
+        line = ((f"{series_name} — " if series_name else "") + ", ".join(pairs)).strip()
         if line:
             texts.append(line)
     return texts
