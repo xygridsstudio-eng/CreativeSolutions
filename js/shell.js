@@ -14,6 +14,9 @@
     newsletter: { src: 'apps/newsletter/index.html', title: 'Newsletter Builder' },
     about: { src: 'apps/about/index.html', title: 'About & How to Use' },
   };
+  // Tools hidden from the sidebar for now — fully wired underneath, just not
+  // shown. Remove a key here to bring that tool back for the team.
+  const HIDDEN_TOOLS = ['newsletter'];
   const DEFAULT_TOOL = 'contentcheck';
   const DEFAULT_LOGO_SRC = 'assets/logo.svg';
   const STORAGE_KEY = 'cs_suite_state_v1';
@@ -24,6 +27,9 @@
   const loading = el('contentLoading');
   const sidebar = el('sidebar');
   const navItems = Array.from(document.querySelectorAll('.nav-item'));
+  navItems.forEach((btn) => {
+    if (HIDDEN_TOOLS.includes(btn.dataset.tool)) btn.classList.add('hidden');
+  });
 
   function loadState() {
     try {
@@ -80,8 +86,9 @@
   }
 
   function setActiveTool(key) {
-    const tool = TOOLS[key] || TOOLS[DEFAULT_TOOL];
-    const resolvedKey = TOOLS[key] ? key : DEFAULT_TOOL;
+    const isUsable = TOOLS[key] && !HIDDEN_TOOLS.includes(key);
+    const tool = isUsable ? TOOLS[key] : TOOLS[DEFAULT_TOOL];
+    const resolvedKey = isUsable ? key : DEFAULT_TOOL;
 
     navItems.forEach((btn) => btn.classList.toggle('active', btn.dataset.tool === resolvedKey));
     loading.classList.remove('hidden');

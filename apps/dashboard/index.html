@@ -5,34 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Creative Solutions — KPI &amp; Utilization Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Poppins:wght@500;600;700&family=Montserrat:wght@500;600;700&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&family=Roboto:wght@400;500;600&family=Lato:wght@400;600;700&family=Open+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;900&family=Space+Grotesk:wght@500;600;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@500;600;700&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&family=Roboto:wght@400;500;600&family=Lato:wght@400;600;700&family=Open+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="lib/xlsx.full.min.js"></script>
 <script src="lib/chart.umd.js"></script>
 <script src="lib/pptxgen.bundle.js"></script>
 <style>
   :root{
-    --font-header: 'Space Grotesk', sans-serif;
-    --font-body: 'Inter', sans-serif;
-    --bg: #0A0E13;
-    --panel: #121821;
-    --banner: #171F2A;
+    /* PepsiCo Digital Minikit — Dark Universal Theme (Fresh navy ramp),
+       status accents from the expanded palette: Leaf (good), Grain
+       (warning), Grapefruit (risk) — same mapping used across the suite. */
+    --font-header: 'Barlow Semi Condensed', sans-serif;
+    --font-body: 'Poppins', sans-serif;
+    --bg: #011423;
+    --panel: #02355A;
+    --banner: #155798;
     --line: #232E3B;
-    --text: #E7ECF2;
+    --text: #FFFFFF;
     --muted: #8592A6;
     --faint: #57677B;
-    --cyan: #4FD1C5;    --cyan-rgb: 79,209,197;
-    --amber: #F2A93B;   --amber-rgb: 242,169,59;
-    --coral: #EF6461;   --coral-rgb: 239,100,97;
+    --cyan: #8EBC29;    --cyan-rgb: 142,188,41;
+    --amber: #EB9F0A;   --amber-rgb: 235,159,10;
+    --coral: #DF6273;   --coral-rgb: 223,98,115;
     --track: #202A36;
     --radius: 14px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:
-      radial-gradient(1100px 500px at 15% -10%, rgba(var(--cyan-rgb),0.07), transparent 60%),
-      radial-gradient(900px 500px at 100% 0%, rgba(var(--amber-rgb),0.05), transparent 55%),
-      var(--bg);
+    background:var(--bg);
     color:var(--text);
     font-family:var(--font-body);
     min-height:100vh;
@@ -45,7 +45,7 @@
     display:flex; align-items:center; justify-content:space-between; gap:24px;
     padding:20px 32px; border-bottom:1px solid var(--line);
     flex-wrap:wrap;
-    position:sticky; top:0; background:var(--banner);
+    position:sticky; top:0; background:linear-gradient(135deg, var(--panel), var(--bg));
     z-index:20;
   }
   .brand{display:flex; align-items:center; gap:12px;}
@@ -57,7 +57,7 @@
     flex:none;
   }
   .brand .mark span{ width:16px;height:16px;border-radius:5px;background:var(--bg); }
-  .brand h1{font-size:26px;margin:0;font-weight:700;letter-spacing:-0.02em; font-family:var(--font-header);}
+  .brand h1{font-size:26px;margin:0;font-weight:900;text-transform:uppercase;letter-spacing:0.01em; font-family:var(--font-header);}
   .brand p{margin:0;font-size:14px;color:var(--muted);}
 
   .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
@@ -76,38 +76,6 @@
   .ppt-btn{ background:var(--amber); color:#2B1B03; }
   .ppt-btn:disabled{ background:var(--banner); color:var(--faint); cursor:not-allowed; transform:none; filter:none; border:1px solid var(--line); }
   .file-name{font-size:12px;color:var(--muted);}
-
-  /* design panel */
-  .design-toggle{
-    display:inline-flex; align-items:center; gap:7px;
-    background:var(--banner); color:var(--text); border:1px solid var(--line);
-    border-radius:9px; padding:9px 14px; font-size:13px; font-family:inherit; cursor:pointer;
-  }
-  .design-toggle:hover{ filter:brightness(1.15); }
-  .design-toggle svg{ transition:transform .2s ease; }
-  .design-toggle.open svg{ transform:rotate(180deg); }
-  .design-panel{
-    max-height:0; overflow:hidden; border-bottom:1px solid transparent;
-    background:var(--banner); transition:max-height .28s ease;
-  }
-  .design-panel.open{ max-height:520px; border-bottom:1px solid var(--line); }
-  .design-inner{ padding:20px 32px 24px; }
-  .design-inner h4{ margin:0 0 4px; font-family:var(--font-header); font-size:14px; font-weight:600; }
-  .design-inner .hint{ margin:0 0 16px; font-size:11.5px; color:var(--muted); }
-  .design-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:14px 20px; }
-  .design-field label{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:0.3px; color:var(--muted); margin-bottom:6px; }
-  .design-field select{ width:100%; }
-  .swatch-row{ display:flex; align-items:center; gap:10px; }
-  .swatch-row input[type=color]{
-    width:38px; height:34px; padding:0; border:1px solid var(--line); border-radius:8px; background:none; cursor:pointer;
-  }
-  .swatch-row span{ font-size:12px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
-  .design-actions{ margin-top:18px; display:flex; gap:10px; }
-  .reset-btn{
-    background:transparent; color:var(--muted); border:1px solid var(--line); border-radius:9px;
-    padding:8px 14px; font-size:12.5px; cursor:pointer; font-family:inherit;
-  }
-  .reset-btn:hover{ color:var(--text); border-color:var(--muted); }
 
   /* filter bar */
   .filterbar{
@@ -129,7 +97,7 @@
   main{padding:28px 32px 60px; max-width:1440px; margin:0 auto;}
 
   .empty-state{ margin-top:12vh; text-align:center; color:var(--muted); }
-  .empty-state h2{color:var(--text); font-family:var(--font-header); font-size:22px; margin-bottom:8px;}
+  .empty-state h2{color:var(--text); font-family:var(--font-header); font-size:22px; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.01em;}
   .empty-state p{font-size:14px; max-width:480px; margin:0 auto 22px;}
   .empty-state .file-btn{font-size:14px; padding:12px 20px; margin:0 auto; width:max-content;}
 
@@ -182,7 +150,7 @@
 
   .panel{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 20px 12px; }
   .panel-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
-  .panel-head h3{margin:0; font-family:var(--font-header); font-size:14.5px; font-weight:600;}
+  .panel-head h3{margin:0; font-family:var(--font-header); font-size:14.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.01em;}
   .panel-head span.tag{font-size:11px; color:var(--muted);}
   .chart-box{position:relative; width:100%;}
   .scroll-y{max-height:340px; overflow-y:auto;}
@@ -229,10 +197,6 @@
   </div>
   <div class="controls">
     <span class="file-name mono" id="fileName">no workbook loaded</span>
-    <button class="design-toggle" id="designToggle" type="button">
-      <span>🎨 Design</span>
-      <svg width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M1 1L5.5 6L10 1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </button>
     <button class="file-btn ppt-btn" id="pptBtn" disabled title="Load a workbook first">
       <span id="pptBtnLabel">Build PowerPoint</span>
     </button>
@@ -242,67 +206,6 @@
     </label>
   </div>
 </header>
-
-<div class="design-panel" id="designPanel">
-  <div class="design-inner">
-    <h4>Design settings</h4>
-    <p class="hint">Live preview across the whole dashboard. Changes apply instantly but aren't saved — re-apply after reloading the page.</p>
-    <div class="design-grid">
-      <div class="design-field">
-        <label>Header font</label>
-        <select id="fontHeaderSelect">
-          <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
-          <option value="'Poppins', sans-serif">Poppins</option>
-          <option value="'Montserrat', sans-serif">Montserrat</option>
-          <option value="'Playfair Display', serif">Playfair Display</option>
-          <option value="Georgia, serif">Georgia</option>
-          <option value="Arial, sans-serif">Arial</option>
-        </select>
-      </div>
-      <div class="design-field">
-        <label>Body font</label>
-        <select id="fontBodySelect">
-          <option value="'Inter', sans-serif">Inter</option>
-          <option value="'Roboto', sans-serif">Roboto</option>
-          <option value="'Lato', sans-serif">Lato</option>
-          <option value="'Open Sans', sans-serif">Open Sans</option>
-          <option value="Arial, sans-serif">Arial</option>
-        </select>
-      </div>
-      <div class="design-field">
-        <label>Font color</label>
-        <div class="swatch-row"><input type="color" id="colorText"><span id="colorTextVal"></span></div>
-      </div>
-      <div class="design-field">
-        <label>Background</label>
-        <div class="swatch-row"><input type="color" id="colorBg"><span id="colorBgVal"></span></div>
-      </div>
-      <div class="design-field">
-        <label>Panel background</label>
-        <div class="swatch-row"><input type="color" id="colorPanel"><span id="colorPanelVal"></span></div>
-      </div>
-      <div class="design-field">
-        <label>Section banner background</label>
-        <div class="swatch-row"><input type="color" id="colorBanner"><span id="colorBannerVal"></span></div>
-      </div>
-      <div class="design-field">
-        <label>Accent — good / on target</label>
-        <div class="swatch-row"><input type="color" id="colorCyan"><span id="colorCyanVal"></span></div>
-      </div>
-      <div class="design-field">
-        <label>Accent — warning</label>
-        <div class="swatch-row"><input type="color" id="colorAmber"><span id="colorAmberVal"></span></div>
-      </div>
-      <div class="design-field">
-        <label>Accent — risk / critical</label>
-        <div class="swatch-row"><input type="color" id="colorCoral"><span id="colorCoralVal"></span></div>
-      </div>
-    </div>
-    <div class="design-actions">
-      <button class="reset-btn" id="themeResetBtn" type="button">Reset to default</button>
-    </div>
-  </div>
-</div>
 
 <div class="filterbar" id="filterBar" style="display:none;">
   <div class="group">
@@ -433,15 +336,15 @@
 
   // ---------- theme ----------
   const DEFAULT_THEME = {
-    fontHeader: "'Space Grotesk', sans-serif",
-    fontBody: "'Inter', sans-serif",
-    text: '#E7ECF2',
-    bg: '#0A0E13',
-    panel: '#121821',
-    banner: '#171F2A',
-    cyan: '#4FD1C5',
-    amber: '#F2A93B',
-    coral: '#EF6461',
+    fontHeader: "'Barlow Semi Condensed', sans-serif",
+    fontBody: "'Poppins', sans-serif",
+    text: '#FFFFFF',
+    bg: '#011423',
+    panel: '#02355A',
+    banner: '#155798',
+    cyan: '#8EBC29',
+    amber: '#EB9F0A',
+    coral: '#DF6273',
   };
   let theme = { ...DEFAULT_THEME };
 
@@ -486,40 +389,6 @@
     COLORS.cyan = t.cyan; COLORS.amber = t.amber; COLORS.coral = t.coral;
 
     if (state) renderAll();
-  }
-
-  function syncDesignInputs(){
-    document.getElementById('fontHeaderSelect').value = theme.fontHeader;
-    document.getElementById('fontBodySelect').value = theme.fontBody;
-    const fields = [
-      ['colorText','text'], ['colorBg','bg'], ['colorPanel','panel'], ['colorBanner','banner'],
-      ['colorCyan','cyan'], ['colorAmber','amber'], ['colorCoral','coral'],
-    ];
-    fields.forEach(([id,key]) => {
-      document.getElementById(id).value = theme[key];
-      document.getElementById(id+'Val').textContent = theme[key].toUpperCase();
-    });
-  }
-
-  function wireDesignPanel(){
-    document.getElementById('designToggle').addEventListener('click', () => {
-      document.getElementById('designPanel').classList.toggle('open');
-      document.getElementById('designToggle').classList.toggle('open');
-    });
-    document.getElementById('fontHeaderSelect').addEventListener('change', e => applyTheme({...theme, fontHeader:e.target.value}));
-    document.getElementById('fontBodySelect').addEventListener('change', e => applyTheme({...theme, fontBody:e.target.value}));
-    const colorMap = { colorText:'text', colorBg:'bg', colorPanel:'panel', colorBanner:'banner', colorCyan:'cyan', colorAmber:'amber', colorCoral:'coral' };
-    Object.keys(colorMap).forEach(id => {
-      document.getElementById(id).addEventListener('input', e => {
-        const key = colorMap[id];
-        document.getElementById(id+'Val').textContent = e.target.value.toUpperCase();
-        applyTheme({ ...theme, [key]: e.target.value });
-      });
-    });
-    document.getElementById('themeResetBtn').addEventListener('click', () => {
-      applyTheme({ ...DEFAULT_THEME });
-      syncDesignInputs();
-    });
   }
 
   // ---------- generic helpers ----------
@@ -1296,8 +1165,6 @@
   document.getElementById('fileInput2').addEventListener('change', e => handleFile(e.target.files[0]));
 
   applyTheme({ ...DEFAULT_THEME });
-  wireDesignPanel();
-  syncDesignInputs();
 })();
 </script>
 </body>

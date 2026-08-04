@@ -106,6 +106,7 @@ body {
 }
 .nav-item:hover { background: var(--sb-panel); color: var(--sb-text); }
 .nav-item.active { background: rgba(var(--sb-accent-rgb), 0.12); color: var(--sb-accent); }
+.nav-item.hidden { display: none !important; }
 .nav-icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 18px; }
 .sidebar.collapsed .nav-label { display: none; }
 .sidebar.collapsed .nav-item { justify-content: center; padding: 10px 0; }
