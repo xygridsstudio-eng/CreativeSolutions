@@ -65,6 +65,44 @@ def _extract_diagram_texts(shape) -> list[str]:
     return texts
 
 
+def _extract_chart_texts(chart) -> list[str]:
+    """Unlike SmartArt, python-pptx has a proper Chart API — no need to hand
+    -walk the chart XML part. Without this, edits to a chart's underlying
+    numbers (the whole point of a chart) are completely invisible to the
+    comparison, same gap that existed in the JS parser before
+    extractChartTexts was added there.
+    """
+    texts = []
+    if chart.has_title and chart.chart_title.text_frame is not None:
+        title = _collapse(chart.chart_title.text_frame.text)
+        if title:
+            texts.append(f"Chart title: {title}")
+
+    try:
+        categories = [str(c) for c in list(chart.plots[0].categories)] if chart.plots else []
+    except (IndexError, ValueError):
+        categories = []
+
+    def fmt_value(v):
+        if v is None:
+            return ""
+        # python-pptx always hands back floats; the JS parser reads the raw
+        # cached string from the chart XML (e.g. "5000", not "5000.0") — match
+        # that so the same chart parses to identical text via either path.
+        return str(int(v)) if float(v).is_integer() else str(v)
+
+    for series in chart.series:
+        pairs = [
+            f"{categories[i] if i < len(categories) else f'#{i}'}: {fmt_value(v)}"
+            for i, v in enumerate(series.values)
+        ]
+        line = (f"{series.name} — " if series.name else "") + ", ".join(pairs)
+        line = line.strip()
+        if line:
+            texts.append(line)
+    return texts
+
+
 def parse_pptx(data: bytes, filename: str) -> dict:
     prs = Presentation(io.BytesIO(data))
     sections = []
@@ -109,6 +147,10 @@ def parse_pptx(data: bytes, filename: str) -> dict:
             # no-op (returns []) for anything that isn't actually a diagram.
             for text in _extract_diagram_texts(shape):
                 section["blocks"].append({"type": "list", "text": text, "cells": None, "tableId": None, "rowIndex": None})
+
+            if shape.has_chart:
+                for text in _extract_chart_texts(shape.chart):
+                    section["blocks"].append({"type": "list", "text": text, "cells": None, "tableId": None, "rowIndex": None})
 
         if slide.has_notes_slide and slide.notes_slide.notes_text_frame is not None:
             for paragraph in slide.notes_slide.notes_text_frame.paragraphs:

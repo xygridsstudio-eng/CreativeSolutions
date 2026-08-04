@@ -197,6 +197,11 @@
       const diagramTexts = await extractDiagramTexts(zip, slidePath, xml);
       diagramTexts.forEach((text) => section.blocks.push({ type: 'list', text }));
 
+      // Charts are likewise a separate part, not inline shape text — see
+      // extractChartTexts for why this matters.
+      const chartTexts = await extractChartTexts(zip, slidePath, xml);
+      chartTexts.forEach((text) => section.blocks.push({ type: 'list', text }));
+
       // Tables live in graphicFrame > tbl, not in <p:sp>.
       const tables = Array.from(xml.getElementsByTagNameNS('*', 'tbl'));
       tables.forEach((tbl) => {
@@ -310,6 +315,81 @@
           .filter(Boolean)
           .forEach((text) => texts.push(text));
       });
+    }
+    return texts;
+  }
+
+  /** idx -> trimmed text, from a <c:cat>/<c:val>'s <c:pt idx="N"><c:v>...</c:v></c:pt> points. */
+  function chartPointsByIdx(container) {
+    const map = new Map();
+    if (!container) return map;
+    Array.from(container.getElementsByTagNameNS('*', 'pt')).forEach((pt) => {
+      const idx = pt.getAttribute('idx');
+      const v = pt.getElementsByTagNameNS('*', 'v')[0];
+      if (idx != null && v) map.set(idx, v.textContent.trim());
+    });
+    return map;
+  }
+
+  function chartTitleText(chartXml) {
+    const titleEl = chartXml.getElementsByTagNameNS('*', 'title')[0];
+    if (!titleEl) return '';
+    return collapseRuns(Array.from(titleEl.getElementsByTagNameNS('*', 't')).map((n) => n.textContent));
+  }
+
+  /** One line per series: "<series name> — <category>: <value>, <category>: <value>, ...". */
+  function chartSeriesLines(chartXml) {
+    return Array.from(chartXml.getElementsByTagNameNS('*', 'ser')).map((ser) => {
+      const txEl = ser.getElementsByTagNameNS('*', 'tx')[0];
+      const nameV = txEl ? txEl.getElementsByTagNameNS('*', 'v')[0] : null;
+      const seriesName = nameV ? nameV.textContent.trim() : '';
+
+      const categories = chartPointsByIdx(ser.getElementsByTagNameNS('*', 'cat')[0]);
+      const values = chartPointsByIdx(ser.getElementsByTagNameNS('*', 'val')[0]);
+      const idxs = Array.from(new Set([...categories.keys(), ...values.keys()])).sort((a, b) => Number(a) - Number(b));
+      const pairs = idxs.map((idx) => `${categories.get(idx) || `#${idx}`}: ${values.get(idx) != null ? values.get(idx) : ''}`);
+
+      return ((seriesName ? `${seriesName} — ` : '') + pairs.join(', ')).trim();
+    }).filter(Boolean);
+  }
+
+  /**
+   * Chart data is likewise not inline in the slide XML — a chart's
+   * graphicFrame only holds <c:chart r:id="rIdX"/>, pointing to a separate
+   * ppt/charts/chartN.xml part with the actual title/series/category/value
+   * data. Without this, edits to a chart's underlying numbers (the whole
+   * point of a chart) are completely invisible to the comparison.
+   * Covers standard chart types (bar/line/pie/etc. via <c:cat>/<c:val>);
+   * modern "chartEx" types (waterfall, funnel, ...) use a different, not
+   * currently supported, schema and a distinct graphicData uri, so they're
+   * safely skipped rather than mis-parsed.
+   */
+  async function extractChartTexts(zip, slidePath, xml) {
+    const relIds = Array.from(xml.getElementsByTagNameNS('*', 'graphicFrame'))
+      .map((gf) => gf.getElementsByTagNameNS('*', 'graphicData')[0])
+      .filter((gd) => gd && /\/chart$/i.test(gd.getAttribute('uri') || ''))
+      .map((gd) => gd.getElementsByTagNameNS('*', 'chart')[0])
+      .filter(Boolean)
+      .map((el) => el.getAttributeNS(RELATIONSHIPS_NS, 'id'))
+      .filter(Boolean);
+    if (!relIds.length) return [];
+
+    const relsPath = relsPathFor(slidePath);
+    if (!zip.files[relsPath]) return [];
+    const relsXml = new DOMParser().parseFromString(await zip.files[relsPath].async('text'), 'application/xml');
+    const targetById = new Map(
+      Array.from(relsXml.getElementsByTagNameNS('*', 'Relationship')).map((r) => [r.getAttribute('Id'), r.getAttribute('Target')])
+    );
+
+    const texts = [];
+    for (const relId of relIds) {
+      const target = targetById.get(relId);
+      const chartPath = target && resolveRelPath(slidePath, target);
+      if (!chartPath || !zip.files[chartPath]) continue;
+      const chartXml = new DOMParser().parseFromString(await zip.files[chartPath].async('text'), 'application/xml');
+      const title = chartTitleText(chartXml);
+      if (title) texts.push(`Chart title: ${title}`);
+      texts.push(...chartSeriesLines(chartXml));
     }
     return texts;
   }
