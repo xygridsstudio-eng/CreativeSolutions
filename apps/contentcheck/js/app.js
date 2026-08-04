@@ -62,7 +62,13 @@
   }
 
   function nextFrame() {
-    return new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
+    // Plain macrotask yield rather than requestAnimationFrame: rAF is
+    // suspended entirely for backgrounded/hidden tabs, so if a user starts a
+    // comparison and switches tabs while it "runs," this used to hang
+    // forever waiting for a frame that browsers intentionally never deliver
+    // to a hidden tab. setTimeout still fires (possibly throttled, but not
+    // indefinitely) regardless of tab visibility.
+    return new Promise((resolve) => setTimeout(resolve, 0));
   }
 
   async function downloadReport() {

@@ -410,6 +410,28 @@
     return window.pdfjsLib;
   }
 
+  /**
+   * Join PDF text items into one string, inserting a space only where the
+   * original PDF actually had a visible horizontal gap. Text is often split
+   * into several items at hyphen/kerning-pair boundaries with zero or even
+   * negative gap between them (still part of the same word) — blindly
+   * joining every item with a space turned "build-up" into "build - up".
+   */
+  function joinTextItems(items) {
+    let out = '';
+    for (let i = 0; i < items.length; i++) {
+      if (i > 0) {
+        const prev = items[i - 1];
+        const gap = items[i].transform[4] - (prev.transform[4] + (prev.width || 0));
+        if (gap > 1) out += ' ';
+      }
+      out += items[i].str;
+    }
+    return out.replace(/\s+/g, ' ').trim();
+  }
+
+  const PDF_BULLET_RE = /^[•▪◦‣∙·–—\-\*]\s+/;
+
   async function parsePdf(file) {
     const pdfjsLib = getPdfjs();
     const arrayBuffer = await file.arrayBuffer();
@@ -455,17 +477,15 @@
         if (looksLikeTable) {
           flushParagraph();
           tableCounter += 1;
-          const cells = [];
-          let cellBuf = [items[0].str];
+          const cellGroups = [[items[0]]];
           for (let i = 1; i < items.length; i++) {
             if (gaps[i - 1] > 18) {
-              cells.push(cellBuf.join('').trim());
-              cellBuf = [items[i].str];
+              cellGroups.push([items[i]]);
             } else {
-              cellBuf.push(items[i].str);
+              cellGroups[cellGroups.length - 1].push(items[i]);
             }
           }
-          cells.push(cellBuf.join('').trim());
+          const cells = cellGroups.map((group) => joinTextItems(group));
           if (cells.some((c) => c)) {
             section.blocks.push({
               type: 'tableRow',
@@ -476,10 +496,15 @@
             });
           }
         } else {
-          const lineText = items.map((it) => it.str).join(' ').replace(/\s+/g, ' ').trim();
+          const lineText = joinTextItems(items);
           if (!lineText) return;
           // Blank-gap heuristic: a big vertical jump starts a new paragraph.
-          if (lastY !== null && lastY - y > 22) flushParagraph();
+          // A bulleted line is always its own paragraph too, regardless of
+          // gap size — bullet lists commonly use the same tight spacing
+          // between separate bullets as between wrapped lines within one
+          // bullet, so the vertical gap alone can't tell those apart.
+          const isBullet = PDF_BULLET_RE.test(lineText);
+          if (lastY !== null && (lastY - y > 22 || isBullet)) flushParagraph();
           paragraphBuffer.push(lineText);
           lastY = y;
         }

@@ -1,6 +1,12 @@
 import io
+import re
 
 import pdfplumber
+
+# pdfplumber's own extract_words() already handles inter-word spacing via
+# x-tolerance clustering, so (unlike the JS/pdf.js parser) it doesn't need a
+# fix for hyphen/kerning boundaries turning into spurious spaces.
+_BULLET_RE = re.compile(r"^[•▪◦‣∙·–—\-*]\s+")
 
 
 def _in_any_bbox(obj: dict, bboxes: list[tuple]) -> bool:
@@ -31,7 +37,12 @@ def _group_words_into_paragraphs(words: list[dict]) -> list[str]:
             continue
         top = min(w["top"] for w in line_words)
         bottom = max(w["bottom"] for w in line_words)
-        if last_bottom is not None and top - last_bottom > 8:
+        # A bulleted line is always its own paragraph, regardless of gap size
+        # — bullet lists commonly use the same tight line-spacing between
+        # separate bullets as between wrapped lines within one bullet, so the
+        # vertical gap alone can't tell those apart.
+        is_bullet = bool(_BULLET_RE.match(line_text))
+        if last_bottom is not None and (top - last_bottom > 8 or is_bullet):
             if buffer:
                 paragraphs.append(" ".join(buffer).strip())
             buffer = []
