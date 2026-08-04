@@ -31,7 +31,7 @@
   // Opt-in only — see the "Use enhanced parsing" toggle in index.html.
   // Content Check works fully offline without this; it's only used when a
   // user explicitly asks for it, since it means uploading files to a server.
-  const BACKEND_URL = 'https://content-check-backend.onrender.com';
+  const BACKEND_URL = 'https://content-check-backend-h62t.onrender.com';
 
   async function parseFileViaBackend(file) {
     const formData = new FormData();
