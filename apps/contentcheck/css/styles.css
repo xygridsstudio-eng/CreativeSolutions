@@ -1,29 +1,33 @@
 :root {
-  --bg: #0A0E13;
-  --panel: #121821;
-  --surface: #171F2A;
-  --track: #202A36;
-  --border: #232E3B;
-  --text: #E7ECF2;
-  --text-muted: #8592A6;
-  --primary: #4FD1C5;
-  --primary-dark: #3BB6AB;
-  --primary-soft: rgba(79, 209, 197, 0.10);
-  --green: #4FD1C5;
-  --green-bg: rgba(79, 209, 197, 0.16);
-  --yellow: #F2A93B;
-  --yellow-bg: rgba(242, 169, 59, 0.16);
-  --red: #EF6461;
-  --red-bg: rgba(239, 100, 97, 0.16);
-  --blue: #7C93F2;
-  --blue-bg: rgba(124, 147, 242, 0.16);
+  /* PepsiCo Digital Minikit — Dark Universal Theme (Fresh navy ramp),
+     with status colors drawn from the expanded palette for max contrast
+     against each other: Leaf (match), Grain (modified), Grapefruit
+     (missing), Plum (added). */
+  --bg: #011423;
+  --panel: #02355A;
+  --surface: color-mix(in srgb, #02355A 85%, white);
+  --track: color-mix(in srgb, #02355A 70%, white);
+  --border: rgba(165, 203, 238, 0.14);
+  --text: #FFFFFF;
+  --text-muted: #71A8E3;
+  --primary: #3680CE;
+  --primary-dark: #155798;
+  --primary-soft: rgba(54, 128, 206, 0.10);
+  --green: #8EBC29;
+  --green-bg: rgba(142, 188, 41, 0.16);
+  --yellow: #EB9F0A;
+  --yellow-bg: rgba(235, 159, 10, 0.16);
+  --red: #DF6273;
+  --red-bg: rgba(223, 98, 115, 0.16);
+  --blue: #AC64C9;
+  --blue-bg: rgba(172, 100, 201, 0.16);
   --radius: 14px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
 
-  --theme-header-font: 'Space Grotesk', sans-serif;
-  --theme-body-font: 'Inter', sans-serif;
-  --banner-bg: #171F2A;
-  --banner-bg-2: #0A0E13;
+  --theme-header-font: 'Barlow Semi Condensed', sans-serif;
+  --theme-body-font: 'Poppins', sans-serif;
+  --banner-bg: #02355A;
+  --banner-bg-2: #011423;
 }
 
 * { box-sizing: border-box; }
@@ -42,7 +46,7 @@ body {
   padding: 28px 24px;
   text-align: left;
 }
-.app-header h1 { margin: 0 0 4px; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; font-family: var(--theme-header-font); }
+.app-header h1 { margin: 0 0 4px; font-size: 26px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.01em; font-family: var(--theme-header-font); }
 .app-header p { margin: 0; color: #cbd5e1; font-size: 14px; }
 
 .container {
@@ -63,6 +67,8 @@ body {
   margin: 0 0 16px;
   font-size: 16px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
   color: var(--text);
   font-family: var(--theme-header-font);
   display: flex;

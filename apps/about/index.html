@@ -5,33 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>About</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0A0E13;
-    --panel:#121821;
-    --line:#232E3B;
-    --text:#E7ECF2;
-    --muted:#8592A6;
-    --accent:#4FD1C5;
-    --amber:#F2A93B;
-    --font-header:'Space Grotesk', sans-serif;
-    --font-body:'Inter', sans-serif;
-    --banner-bg:#171F2A;
-    --banner-bg-2:#0A0E13;
+    /* PepsiCo Digital Minikit — Dark Universal Theme (Fresh navy ramp) */
+    --bg:#011423;
+    --panel:#02355A;
+    --line:rgba(165, 203, 238, 0.14);
+    --text:#FFFFFF;
+    --muted:#71A8E3;
+    --accent:#3680CE;
+    --amber:#EB9F0A;
+    --font-header:'Barlow Semi Condensed', sans-serif;
+    --font-body:'Poppins', sans-serif;
+    --banner-bg:#02355A;
+    --banner-bg-2:#011423;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:var(--font-body);}
 
   .app-header{background:linear-gradient(135deg, var(--banner-bg), var(--banner-bg-2));color:#fff;padding:28px 24px;text-align:left;}
-  .app-header h1{margin:0 0 4px;font-size:26px;font-weight:700;letter-spacing:-0.02em;font-family:var(--font-header);}
+  .app-header h1{margin:0 0 4px;font-size:26px;font-weight:900;text-transform:uppercase;letter-spacing:0.01em;font-family:var(--font-header);}
   .app-header p{margin:0;color:#cbd5e1;font-size:14px;}
 
   .container{max-width:1080px;margin:0 auto;padding:28px 20px 60px;}
 
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.35);padding:24px;margin-bottom:20px;}
-  .panel h2{margin:0 0 14px;font-family:var(--font-header);font-size:17px;font-weight:600;color:var(--text);}
+  .panel h2{margin:0 0 14px;font-family:var(--font-header);font-size:17px;font-weight:600;text-transform:uppercase;letter-spacing:0.01em;color:var(--text);}
   .panel p{margin:0 0 12px;font-size:14px;line-height:1.65;color:var(--muted);}
   .panel p:last-child{margin-bottom:0;}
   .panel ul{margin:0;padding-left:18px;}
@@ -41,18 +42,18 @@
 
   .tool-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-top:4px;}
   .tool-card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
-  .tool-card h3{margin:0 0 6px;font-family:var(--font-header);font-size:14.5px;font-weight:600;color:var(--text);}
+  .tool-card h3{margin:0 0 6px;font-family:var(--font-header);font-size:14.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.01em;color:var(--text);}
   .tool-card p{margin:0;font-size:13px;line-height:1.6;color:var(--muted);}
 
   .steps{counter-reset:step;list-style:none;margin:0;padding:0;}
   .steps li{counter-increment:step;position:relative;padding-left:34px;margin-bottom:14px;font-size:14px;line-height:1.6;color:var(--muted);}
   .steps li:last-child{margin-bottom:0;}
-  .steps li::before{content:counter(step);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#0A0E13;font-family:var(--font-header);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;}
+  .steps li::before{content:counter(step);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--font-header);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;}
   .steps li b{color:var(--text);}
 
   .how-to-block{margin-bottom:22px;}
   .how-to-block:last-child{margin-bottom:0;}
-  .how-to-block h3{margin:0 0 12px;font-family:var(--font-header);font-size:15px;font-weight:600;color:var(--amber);}
+  .how-to-block h3{margin:0 0 12px;font-family:var(--font-header);font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:0.01em;color:var(--amber);}
 
   .footer-note{text-align:center;color:var(--muted);font-size:12px;margin-top:8px;}
 </style>

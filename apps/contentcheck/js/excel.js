@@ -12,17 +12,21 @@
 
   const U = global.CCUtils;
 
+  // PepsiCo Digital Minikit palette — the "50" step of each ramp as a light
+  // Excel cell fill (spreadsheets are a light-background context, unlike
+  // the app's dark theme) paired with that ramp's darkest step as font
+  // color, straight from the brand's own core/expanded color values.
   const COLORS = {
-    headerFill: 'FF1F2937',   // dark slate
+    headerFill: 'FF02355A',   // Fresh 500
     headerFont: 'FFFFFFFF',
-    match: 'FFC6EFCE',        // green
-    matchFont: 'FF006100',
-    modified: 'FFFFEB9C',     // yellow
-    modifiedFont: 'FF9C6500',
-    missing: 'FFFFC7CE',      // red
-    missingFont: 'FF9C0006',
-    added: 'FFBDD7EE',        // blue
-    addedFont: 'FF1F4E78',
+    match: 'FFDDEEB9',        // Leaf 50
+    matchFont: 'FF0F440E',    // Leaf 500
+    modified: 'FFFFF4D6',     // Grain 50
+    modifiedFont: 'FF613305', // Grain 600
+    missing: 'FFFBDFE2',      // Grapefruit 50
+    missingFont: 'FF450D16',  // Grapefruit 600
+    added: 'FFF3E6F9',        // Plum 50
+    addedFont: 'FF270D2B',    // Plum 600
   };
 
   function statusFill(status) {

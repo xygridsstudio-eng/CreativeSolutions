@@ -1,16 +1,17 @@
 :root {
-  --sb-bg: #0A0E13;
-  --sb-panel: #121821;
-  --sb-line: #232E3B;
-  --sb-text: #E7ECF2;
-  --sb-muted: #8592A6;
-  --sb-faint: #57677B;
-  --sb-accent: #4FD1C5;
-  --sb-accent-rgb: 79, 209, 197;
+  /* PepsiCo Digital Minikit — Dark Universal Theme (Fresh navy ramp) */
+  --sb-bg: #011423;
+  --sb-panel: #02355A;
+  --sb-line: rgba(165, 203, 238, 0.14);
+  --sb-text: #FFFFFF;
+  --sb-muted: #71A8E3;
+  --sb-faint: #155798;
+  --sb-accent: #3680CE;
+  --sb-accent-rgb: 54, 128, 206;
   --sb-width: 232px;
   --sb-width-collapsed: 68px;
-  --font-header: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-header: 'Barlow Semi Condensed', sans-serif;
+  --font-body: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -74,7 +75,7 @@ body {
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 .brand-text { min-width: 0; overflow: hidden; white-space: nowrap; }
 .sidebar.collapsed .brand-text { display: none; }
-.brand-name { font-family: var(--font-header); font-weight: 700; font-size: 15px; letter-spacing: -0.01em; color: #fff; }
+.brand-name { font-family: var(--font-header); font-weight: 900; text-transform: uppercase; font-size: 15px; letter-spacing: 0.01em; color: #fff; }
 .brand-sub { font-size: 11px; color: var(--sb-muted); margin-top: 1px; }
 
 .sidebar.collapsed .sidebar-top {
