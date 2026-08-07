@@ -189,12 +189,22 @@
     rows.forEach((r) => {
       const key = r.section || '(No section)';
       if (!map.has(key)) {
-        map.set(key, []);
+        // page/slide is a property of the section, not the individual row —
+        // grab it from whichever row we see first for this section.
+        map.set(key, { section: key, page: r.page, slide: r.slide, rows: [] });
         order.push(key);
       }
-      map.get(key).push(r);
+      map.get(key).rows.push(r);
     });
-    return order.map((key) => ({ section: key, rows: map.get(key) }));
+    return order.map((key) => map.get(key));
+  }
+
+  function sectionLabel(g) {
+    const location = g.slide != null ? `Slide ${g.slide}` : (g.page != null ? `Page ${g.page}` : null);
+    // Slides/pages with no real title fall back to "Slide N"/"Page N" as the
+    // section name itself (see parser.js) — don't double it up as "Slide 1 — Slide 1".
+    if (!location || g.section === location) return g.section;
+    return `${location} — ${g.section}`;
   }
 
   function countsByStatus(rows) {
@@ -260,7 +270,7 @@
         <div class="preview-group">
           <div class="preview-group-header" role="button" tabindex="0" aria-expanded="false">
             <span class="preview-group-chevron">▸</span>
-            <span class="preview-group-title">${global.CCUtils.escapeHtml(g.section)}</span>
+            <span class="preview-group-title">${global.CCUtils.escapeHtml(sectionLabel(g))}</span>
             <span class="preview-group-counts">${countBadges}</span>
           </div>
           <div class="preview-group-body">
