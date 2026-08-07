@@ -16,7 +16,7 @@
   };
   // Tools hidden from the sidebar for now — fully wired underneath, just not
   // shown. Remove a key here to bring that tool back for the team.
-  const HIDDEN_TOOLS = ['newsletter'];
+  const HIDDEN_TOOLS = ['newsletter', 'dashboard'];
   const DEFAULT_TOOL = 'contentcheck';
   const DEFAULT_LOGO_SRC = 'assets/logo.svg';
   const STORAGE_KEY = 'cs_suite_state_v1';

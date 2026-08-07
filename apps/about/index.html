@@ -55,6 +55,15 @@
   .how-to-block:last-child{margin-bottom:0;}
   .how-to-block h3{margin:0 0 12px;font-family:var(--font-header);font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:0.01em;color:var(--amber);}
 
+  .example-block{margin-top:18px;}
+  .example-block h4{margin:0 0 10px;font-family:var(--font-header);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);}
+  .example-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .example-block figure{margin:0 0 12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .example-block figure:last-child{margin-bottom:0;}
+  .example-block img{display:block;width:100%;height:auto;}
+  .example-block figcaption{padding:8px 12px;font-size:11.5px;line-height:1.5;color:var(--muted);border-top:1px solid var(--line);}
+  @media (max-width:600px){.example-grid{grid-template-columns:1fr;}}
+
   .footer-note{text-align:center;color:var(--muted);font-size:12px;margin-top:8px;}
 </style>
 </head>
@@ -75,10 +84,6 @@
         <h3>Content Check</h3>
         <p>Sentence-level comparison between a Source and Output document, with a downloadable Excel diff report.</p>
       </div>
-      <div class="tool-card">
-        <h3>Team Dashboard</h3>
-        <p>Utilization/KPI dashboard driven by an Excel workbook, with live charts and one-click PowerPoint export.</p>
-      </div>
     </div>
   </section>
 
@@ -88,21 +93,29 @@
     <div class="how-to-block">
       <h3>Content Check</h3>
       <ol class="steps">
-        <li>Upload a <b>Source</b> and an <b>Output</b> document (DOCX, PPTX, PDF, or TXT), or fetch each from a URL.</li>
-        <li>Adjust <b>Comparison Options</b> — e.g. ignore case, extra spaces, or bullet symbols.</li>
-        <li>Click <b>Compare</b> to see the summary and a line-by-line preview of changes.</li>
+        <li>Upload a <b>Source</b> and an <b>Output</b> document (DOCX, PPTX, PDF, or TXT).</li>
+        <li>Click <b>Compare</b> to see the summary and a preview of changes, grouped by section.</li>
+        <li>Click a section to expand it — modified rows highlight exactly which words changed.</li>
         <li>Click <b>Download Excel Report</b> to save the full diff report.</li>
       </ol>
-    </div>
 
-    <div class="how-to-block">
-      <h3>Team Dashboard</h3>
-      <ol class="steps">
-        <li>Click <b>Load workbook</b> and select your Excel file (.xlsx/.xls).</li>
-        <li>The KPI cards, charts, and roster table populate automatically from the workbook's data.</li>
-        <li>Use the filter bar to narrow down by business unit or level.</li>
-        <li>Open <b>🎨 Design</b> to adjust fonts and colors, then click <b>Build PowerPoint</b> to export a deck.</li>
-      </ol>
+      <div class="example-block">
+        <h4>Example</h4>
+        <div class="example-grid">
+          <figure>
+            <img src="assets/sample-source.png" alt="Sample source document used as Content Check input">
+            <figcaption>Source document</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/sample-output.png" alt="Sample output document used as Content Check input">
+            <figcaption>Output document</figcaption>
+          </figure>
+        </div>
+        <figure>
+          <img src="assets/sample-comparison.png" alt="Content Check's comparison summary and changed content preview for the sample documents">
+          <figcaption>Content Check's result — modified rows highlight exactly which words changed (percentages, emails, dates, table values), grouped by section</figcaption>
+        </figure>
+      </div>
     </div>
   </section>
 
