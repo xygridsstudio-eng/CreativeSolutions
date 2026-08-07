@@ -33,9 +33,17 @@
   //             src/out items ANYWHERE in the sequence (not just a local
   //             "gap"), so a block that was both edited and moved is still
   //             recognized as Modified rather than Missing+Added.
-  //   Phase 3 — anything still unpaired is genuinely Missing or Added.
+  //   Phase 3 — (optional, via options.positionalFallback) whatever is
+  //             still unpaired after Phase 2 is paired up positionally,
+  //             the Nth remaining src item with the Nth remaining out
+  //             item, as a last-resort Modified. This covers content
+  //             replaced wholesale (e.g. a banner's text pasted over with
+  //             unrelated wording) — too few shared characters/words for
+  //             Phase 2's similarity threshold, but still occupying the
+  //             same slot in the document as its predecessor.
+  //   Phase 4 — anything still unpaired is genuinely Missing or Added.
   // ---------------------------------------------------------------------
-  function alignSequences(srcItems, outItems, keyFn, simFn, threshold) {
+  function alignSequences(srcItems, outItems, keyFn, simFn, threshold, options) {
     const n = srcItems.length;
     const m = outItems.length;
     const srcKeys = srcItems.map(keyFn);
@@ -107,7 +115,24 @@
       ops.push({ type: 'modify', srcIndex: i, outIndex: j, score });
     });
 
-    // Phase 3: whatever's left is genuinely missing or added.
+    // Phase 3 (optional): pair remaining leftovers positionally as a
+    // last-resort Modified, before falling back to Missing/Added.
+    if (options && options.positionalFallback) {
+      const leftoverSrc = [];
+      for (let i = 0; i < n; i++) if (!usedSrc.has(i)) leftoverSrc.push(i);
+      const leftoverOut = [];
+      for (let j = 0; j < m; j++) if (!usedOut.has(j)) leftoverOut.push(j);
+      const pairCount = Math.min(leftoverSrc.length, leftoverOut.length);
+      for (let k = 0; k < pairCount; k++) {
+        const i = leftoverSrc[k];
+        const j = leftoverOut[k];
+        usedSrc.add(i);
+        usedOut.add(j);
+        ops.push({ type: 'modify', srcIndex: i, outIndex: j, score: 0 });
+      }
+    }
+
+    // Phase 4: whatever's left is genuinely missing or added.
     for (let i = 0; i < n; i++) if (!usedSrc.has(i)) ops.push({ type: 'delete', srcIndex: i, outIndex: null });
     for (let j = 0; j < m; j++) if (!usedOut.has(j)) ops.push({ type: 'insert', srcIndex: null, outIndex: j });
 
@@ -418,7 +443,13 @@
         outParas,
         (p) => p.normalizedText,
         (a, b) => U.combinedSimilarity(a.normalizedText, b.normalizedText),
-        MODIFIED_THRESHOLD
+        MODIFIED_THRESHOLD,
+        // Headings/labels/banners are short, standalone text — when one is
+        // replaced with unrelated wording (e.g. pasting a different
+        // banner's text over it), there's too little shared text for
+        // similarity-based matching, but it's still the same slot being
+        // edited, not one line vanishing and an unrelated one appearing.
+        { positionalFallback: true }
       );
 
       paraOps.forEach((pOp) => {
@@ -436,6 +467,13 @@
           pushDetail('missing', activeSection, srcPara, null, null, null, {}, '');
         } else if (pOp.type === 'insert') {
           pushDetail('added', activeSection, null, outPara, null, null, {}, '');
+        } else if (pOp.score === 0) {
+          // Paired by Phase 3's positional fallback, not real similarity —
+          // the two paragraphs share too little text for sentence-level
+          // matching to find anything in common either, so report the
+          // whole paragraph as one Modified row instead of re-diffing it
+          // into nonsensical sentence-level Missing/Added pairs.
+          pushDetail('modified', activeSection, srcPara, outPara, null, null, {}, 'Content replaced');
         } else {
           const sentenceDiffs = compareSentences(srcPara, outPara, options);
           sentenceDiffs.forEach((sd) => {

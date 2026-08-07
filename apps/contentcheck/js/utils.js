@@ -136,6 +136,11 @@
     return text.split(/\s+/).filter(Boolean);
   }
 
+  /** Text with every number replaced by a placeholder, to compare surrounding context only. */
+  function numberSkeleton(text) {
+    return text.replace(/-?\d+(?:,\d{3})*(?:\.\d+)?/g, '#');
+  }
+
   /**
    * Combined similarity score blending character-level (Levenshtein) and
    * word-level (LCS) signals. Robust to both small edits and word reordering.
@@ -144,7 +149,19 @@
     if (a === b) return 1;
     const lev = levenshteinSimilarity(a, b);
     const lcs = lcsSimilarity(a, b);
-    return lev * 0.6 + lcs * 0.4;
+    let score = lev * 0.6 + lcs * 0.4;
+
+    // Two short strings that are otherwise identical except for their
+    // numbers (e.g. "2.3%" vs "5.7%") are a value update, not unrelated
+    // content — always a Modified pair, never Missing+Added. Plain
+    // edit-distance scores these as unrelated because so few characters
+    // are shared, so pairing is boosted whenever stripping the digits
+    // makes both sides equal.
+    const skelA = numberSkeleton(a);
+    const skelB = numberSkeleton(b);
+    if (skelA === skelB && skelA !== a) score = Math.max(score, 0.9);
+
+    return score;
   }
 
   /**

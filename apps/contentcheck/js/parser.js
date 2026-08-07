@@ -79,6 +79,20 @@
   // ---------------------------------------------------------------------
   // DOCX (via mammoth.js -> HTML -> DOM walk)
   // ---------------------------------------------------------------------
+
+  /**
+   * Table-cell text, with <br> line breaks turned into spaces first.
+   * Element.textContent concatenates descendant text nodes with no
+   * separator, so a cell with a manual line break (mammoth renders it as
+   * <br>) would otherwise glue the two lines together, e.g. "Make &" and
+   * "Move" becoming "Make &Move".
+   */
+  function cellText(cell) {
+    const clone = cell.cloneNode(true);
+    clone.querySelectorAll('br').forEach((br) => br.replaceWith(' '));
+    return clone.textContent.replace(/\s+/g, ' ').trim();
+  }
+
   async function parseDocx(file) {
     const arrayBuffer = await file.arrayBuffer();
     const result = await window.mammoth.convertToHtml({ arrayBuffer });
@@ -115,7 +129,7 @@
         tableCounter += 1;
         const tableId = `docx_table_${tableCounter}`;
         Array.from(el.querySelectorAll('tr')).forEach((tr, rowIndex) => {
-          const cells = Array.from(tr.querySelectorAll('td,th')).map((c) => c.textContent.trim());
+          const cells = Array.from(tr.querySelectorAll('td,th')).map((c) => cellText(c));
           if (cells.some((c) => c)) {
             current.blocks.push({
               type: 'tableRow',
@@ -210,7 +224,15 @@
         const rows = Array.from(tbl.getElementsByTagNameNS('*', 'tr'));
         rows.forEach((tr, rowIndex) => {
           const tcs = Array.from(tr.getElementsByTagNameNS('*', 'tc'));
-          const cells = tcs.map((tc) => collapseRuns(Array.from(tc.getElementsByTagNameNS('*', 't')).map((n) => n.textContent)));
+          // Join per-<a:p> paragraph text with a space rather than flattening
+          // every <a:t> run in the cell together — a cell with a manual line
+          // break (a soft-wrapped label like "Make &" / "Move") is stored as
+          // two paragraphs, and collapseRuns() on the raw run list has no
+          // separator between them, gluing the lines into "Make &Move".
+          const cells = tcs.map((tc) => Array.from(tc.getElementsByTagNameNS('*', 'p'))
+            .map((p) => collapseRuns(Array.from(p.getElementsByTagNameNS('*', 't')).map((n) => n.textContent)))
+            .filter(Boolean)
+            .join(' '));
           if (cells.some((c) => c)) {
             section.blocks.push({ type: 'tableRow', text: cells.join(' | '), cells, tableId, rowIndex });
           }
