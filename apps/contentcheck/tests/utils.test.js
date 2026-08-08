@@ -70,6 +70,32 @@ test('diffWords: identical strings produce only equal tokens', () => {
   assert.ok(outTokens.every((t) => t.type === 'equal'));
 });
 
+test('diffWordsMerged: interleaves equal/removed/added as one Word-style redline sequence', () => {
+  const tokens = U.diffWordsMerged('the quick brown fox', 'the slow brown fox');
+  assert.deepEqual(
+    tokens.map((t) => `${t.type}:${t.text}`),
+    ['equal:the', 'added:slow', 'removed:quick', 'equal:brown', 'equal:fox']
+  );
+});
+
+test('diffWordsMerged: identical strings produce only equal tokens, in order', () => {
+  const tokens = U.diffWordsMerged('a b c', 'a b c');
+  assert.deepEqual(tokens.map((t) => t.text), ['a', 'b', 'c']);
+  assert.ok(tokens.every((t) => t.type === 'equal'));
+});
+
+test('diffWordsMerged: a wholly deleted string is all removed tokens', () => {
+  const tokens = U.diffWordsMerged('gone entirely', '');
+  assert.ok(tokens.every((t) => t.type === 'removed'));
+  assert.equal(tokens.length, 2);
+});
+
+test('diffWordsMerged: a wholly inserted string is all added tokens', () => {
+  const tokens = U.diffWordsMerged('', 'brand new text');
+  assert.ok(tokens.every((t) => t.type === 'added'));
+  assert.equal(tokens.length, 3);
+});
+
 test('extractMatches: percentage pattern picks up all matches', () => {
   const matches = U.extractMatches('grew 2.3% then fell 5.7 % overall', U.PATTERNS.percentage);
   assert.equal(matches.length, 2);

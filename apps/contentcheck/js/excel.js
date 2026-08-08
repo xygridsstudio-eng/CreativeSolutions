@@ -172,6 +172,35 @@
     return sheet;
   }
 
+  /**
+   * Word "Track Changes"-style redline as an ExcelJS rich-text cell value:
+   * one run per diff token, strikethrough for deletions and underline for
+   * insertions, all in a single cell — the same inline redline as the HTML
+   * preview's "Changes" column, so a reviewer gets the familiar Word
+   * markup without having to compare two separate columns by eye.
+   */
+  function trackChangesRichText(status, sourceText, outputText) {
+    const s = (status || '').toLowerCase();
+    if (s === 'missing') {
+      return { richText: [{ font: { strike: true, color: { argb: COLORS.missingFont } }, text: sourceText || '(empty)' }] };
+    }
+    if (s === 'added') {
+      return { richText: [{ font: { underline: true, color: { argb: COLORS.addedFont } }, text: outputText || '(empty)' }] };
+    }
+    if (s !== 'modified' && s !== 'reformatted') {
+      return { richText: [{ text: sourceText || outputText || '(empty)' }] };
+    }
+    const tokens = U.diffWordsMerged(sourceText || '', outputText || '');
+    if (!tokens.length) return { richText: [{ text: '(empty)' }] };
+    const runs = tokens.map((t, idx) => {
+      const text = t.text + (idx < tokens.length - 1 ? ' ' : '');
+      if (t.type === 'removed') return { font: { strike: true, color: { argb: COLORS.missingFont } }, text };
+      if (t.type === 'added') return { font: { underline: true, color: { argb: COLORS.addedFont } }, text };
+      return { text };
+    });
+    return { richText: runs };
+  }
+
   function detailToRow(r) {
     let sourceText = r.sourceText || '';
     let outputText = r.outputText || '';
@@ -198,6 +227,7 @@
       status: (r.status || '').charAt(0).toUpperCase() + (r.status || '').slice(1),
       sourceText,
       outputText,
+      trackChanges: trackChangesRichText(r.status, sourceText, outputText),
       comments,
     };
   }
@@ -210,6 +240,7 @@
     { header: 'Paragraph #', key: 'paragraph', width: 12 },
     { header: 'Sentence #', key: 'sentence', width: 12 },
     { header: 'Status', key: 'status', width: 12 },
+    { header: 'Track Changes', key: 'trackChanges', width: 55 },
     { header: 'Source Text', key: 'sourceText', width: 45 },
     { header: 'Output Text', key: 'outputText', width: 45 },
     { header: 'Comments', key: 'comments', width: 30 },

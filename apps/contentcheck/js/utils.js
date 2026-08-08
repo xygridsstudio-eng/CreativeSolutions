@@ -164,21 +164,10 @@
     return score;
   }
 
-  /**
-   * Word-level diff between two strings, so a "modified" row can show just
-   * the words that actually changed instead of two full, mostly-identical
-   * sentences. Unlike lcsLength (space-optimized, length only), this keeps
-   * the full DP table so it can backtrack an actual alignment.
-   * Returns { srcTokens, outTokens }, each an array of
-   * { type: 'equal'|'removed'|'added', text } covering every word on that
-   * side, in original order.
-   */
-  function diffWords(a, b) {
-    const ta = tokenize(a);
-    const tb = tokenize(b);
+  /** Word-level LCS DP table for two token arrays (full table, not space-optimized, so callers can backtrack an alignment). */
+  function wordDiffTable(ta, tb) {
     const n = ta.length;
     const m = tb.length;
-
     const dp = new Array(n + 1);
     for (let i = 0; i <= n; i++) dp[i] = new Array(m + 1).fill(0);
     for (let i = 1; i <= n; i++) {
@@ -186,11 +175,27 @@
         dp[i][j] = ta[i - 1] === tb[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
       }
     }
+    return dp;
+  }
+
+  /**
+   * Word-level diff between two strings, so a "modified" row can show just
+   * the words that actually changed instead of two full, mostly-identical
+   * sentences.
+   * Returns { srcTokens, outTokens }, each an array of
+   * { type: 'equal'|'removed'|'added', text } covering every word on that
+   * side, in original order — for rendering the source and output as two
+   * separate highlighted strings.
+   */
+  function diffWords(a, b) {
+    const ta = tokenize(a);
+    const tb = tokenize(b);
+    const dp = wordDiffTable(ta, tb);
 
     const srcTokens = [];
     const outTokens = [];
-    let i = n;
-    let j = m;
+    let i = ta.length;
+    let j = tb.length;
     while (i > 0 && j > 0) {
       if (ta[i - 1] === tb[j - 1]) {
         srcTokens.push({ type: 'equal', text: ta[i - 1] });
@@ -211,6 +216,42 @@
     srcTokens.reverse();
     outTokens.reverse();
     return { srcTokens, outTokens };
+  }
+
+  /**
+   * Word-level diff as ONE inline sequence — Word "Track Changes"/redline
+   * style: unchanged words plain, deleted words marked for strikethrough,
+   * inserted words marked for underline, all in reading order, instead of
+   * two separate before/after strings. Same alignment as diffWords, just
+   * emitted as a single interleaved stream.
+   * Returns an array of { type: 'equal'|'removed'|'added', text }.
+   */
+  function diffWordsMerged(a, b) {
+    const ta = tokenize(a);
+    const tb = tokenize(b);
+    const dp = wordDiffTable(ta, tb);
+
+    const tokens = [];
+    let i = ta.length;
+    let j = tb.length;
+    while (i > 0 && j > 0) {
+      if (ta[i - 1] === tb[j - 1]) {
+        tokens.push({ type: 'equal', text: ta[i - 1] });
+        i -= 1;
+        j -= 1;
+      } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+        tokens.push({ type: 'removed', text: ta[i - 1] });
+        i -= 1;
+      } else {
+        tokens.push({ type: 'added', text: tb[j - 1] });
+        j -= 1;
+      }
+    }
+    while (i > 0) { tokens.push({ type: 'removed', text: ta[i - 1] }); i -= 1; }
+    while (j > 0) { tokens.push({ type: 'added', text: tb[j - 1] }); j -= 1; }
+
+    tokens.reverse();
+    return tokens;
   }
 
   // ---------------------------------------------------------------------
@@ -336,6 +377,7 @@
     lcsSimilarity,
     combinedSimilarity,
     diffWords,
+    diffWordsMerged,
     tokenize,
     escapeHtml,
     formatBytes,

@@ -223,23 +223,27 @@
   }
 
   /**
-   * Source/Output cell HTML for one preview row. A "modified" or
-   * "reformatted" row shows a word-level diff (unchanged words muted,
-   * changed words highlighted) so the specific change stands out instead
-   * of two full, mostly-identical sentences sitting side by side — for
-   * "reformatted" this usually means most/all words show as unchanged,
-   * visually confirming the content survived the format change. Missing/
-   * added rows have no counterpart to diff against, so they just show the
-   * plain (truncated) text.
+   * One Word "Track Changes"-style redline for a preview row: unchanged
+   * words plain, deleted words struck through, inserted words underlined,
+   * all read left-to-right as a single sentence — instead of two separate
+   * before/after columns a reviewer has to compare by eye. A wholly missing
+   * paragraph reads as entirely struck through (nothing survived); a wholly
+   * added one reads as entirely underlined (nothing to compare against);
+   * "modified"/"reformatted" interleave both inline, exactly like Word's
+   * redline for an edited sentence.
    */
-  function renderRowCells(r) {
-    if (r.status !== 'modified' && r.status !== 'reformatted') {
-      const src = global.CCUtils.escapeHtml((r.sourceText || '').slice(0, 160));
-      const out = global.CCUtils.escapeHtml((r.outputText || '').slice(0, 160));
-      return [src, out];
+  function renderRowContent(r) {
+    if (r.status === 'missing') {
+      return `<mark class="diff-removed">${global.CCUtils.escapeHtml(r.sourceText || '')}</mark>`;
     }
-    const { srcTokens, outTokens } = global.CCUtils.diffWords(r.sourceText || '', r.outputText || '');
-    return [renderDiffTokens(srcTokens), renderDiffTokens(outTokens)];
+    if (r.status === 'added') {
+      return `<mark class="diff-added">${global.CCUtils.escapeHtml(r.outputText || '')}</mark>`;
+    }
+    if (r.status !== 'modified' && r.status !== 'reformatted') {
+      return `<span class="diff-equal">${global.CCUtils.escapeHtml(r.sourceText || r.outputText || '')}</span>`;
+    }
+    const tokens = global.CCUtils.diffWordsMerged(r.sourceText || '', r.outputText || '');
+    return renderDiffTokens(tokens);
   }
 
   function renderPreview(report) {
@@ -258,18 +262,14 @@
         .filter((key) => counts[key])
         .map((key) => `<span class="badge badge-${key}">${counts[key]} ${STATUS_LABELS[key]}</span>`)
         .join('');
-      const rowsHtml = g.rows.map((r) => {
-        const [srcCell, outCell] = renderRowCells(r);
-        return `
+      const rowsHtml = g.rows.map((r) => `
         <tr class="row-${r.status}">
           <td style="width:56px">${r.blockId}</td>
           <td style="width:90px"><span class="badge badge-${r.status}">${STATUS_LABELS[r.status] || r.status}</span></td>
-          <td>${srcCell}</td>
-          <td>${outCell}</td>
+          <td>${renderRowContent(r)}</td>
           <td style="width:160px">${global.CCUtils.escapeHtml(r.comments || '')}</td>
         </tr>
-      `;
-      }).join('');
+      `).join('');
       return `
         <div class="preview-group">
           <div class="preview-group-header" role="button" tabindex="0" aria-expanded="false">
@@ -284,8 +284,7 @@
                   <tr>
                     <th>ID</th>
                     <th>Status</th>
-                    <th>Source Text</th>
-                    <th>Output Text</th>
+                    <th>Changes</th>
                     <th>Comments</th>
                   </tr>
                 </thead>

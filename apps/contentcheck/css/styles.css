@@ -210,7 +210,7 @@ table.preview-table td {
   padding: 9px 12px;
   border-top: 1px solid var(--border);
   vertical-align: top;
-  max-width: 320px;
+  max-width: 640px;
 }
 tr.row-match { background: var(--green-bg); }
 tr.row-modified { background: var(--yellow-bg); }
@@ -225,7 +225,7 @@ tr.row-reformatted { background: var(--teal-bg); }
   font-weight: 700;
 }
 .diff-removed { background: var(--red-bg); color: var(--red); text-decoration: line-through; }
-.diff-added { background: var(--green-bg); color: var(--green); }
+.diff-added { background: var(--green-bg); color: var(--green); text-decoration: underline; }
 
 .preview-groups { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 .preview-group { border-bottom: 1px solid var(--border); }
