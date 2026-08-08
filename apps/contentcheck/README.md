@@ -122,6 +122,7 @@ ContentCheck/
     exceljs.min.js          Styled .xlsx generation
   samples/                Ready-to-use Source/Output file pairs for every format
   assets/                 (reserved for icons/images if you add any)
+  tests/                  Node-based regression tests for utils.js/normalizer.js/comparer.js
 ```
 
 Each JS file has a single responsibility, communicates only through its
@@ -138,6 +139,22 @@ needs to change.
 > header styling, and a frozen header row — all of which ExcelJS supports
 > natively. Swapping the library back is a small, isolated change confined
 > to `excel.js` if you'd prefer SheetJS for another reason.
+
+---
+
+## Running the Tests
+
+`tests/` covers the comparison engine's pure logic — string similarity,
+sentence/table alignment, and the normalizer — using Node's built-in test
+runner. No npm install, no dependencies:
+
+```
+node --test apps/contentcheck/tests/*.test.js
+```
+
+`parser.js` isn't covered here since it needs a real browser DOMParser/
+JSZip/pdf.js; changes to it should still be spot-checked in the browser
+(open `index.html`, or see the samples in `samples/`).
 
 ---
 
