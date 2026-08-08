@@ -168,6 +168,106 @@ test('a paragraph genuinely added with no prior counterpart is still Added', () 
   assert.equal(rows[0].status, 'added');
 });
 
+// ---------------------------------------------------------------------
+// reconcileReformatted: content moved to a different structural type
+// (bullet -> table, table -> diagram, etc.) — the designer-reformatting
+// scenario. Content that survives should never read as unrelated
+// Missing + Added.
+// ---------------------------------------------------------------------
+
+test('a bullet turned into a table cell is Reformatted, not Missing + Added', () => {
+  const comparison = compare(
+    [{ type: 'paragraph', text: 'Achieve better bag fill by reducing bulk density optimization' }],
+    [{
+      type: 'tableRow',
+      text: 'Achieve better bag fill by reducing bulk density optimization',
+      cells: ['Achieve better bag fill by reducing bulk density optimization'],
+      tableId: 't1',
+      rowIndex: 0,
+    }]
+  );
+
+  assert.equal(nonMatchRows(comparison).filter((r) => r.status === 'missing' || r.status === 'added').length, 0);
+
+  const paraRow = comparison.detailRows.find((r) => r.status === 'reformatted');
+  assert.ok(paraRow, 'expected the source paragraph to be relabeled reformatted');
+  assert.match(paraRow.comments, /Reformatted/);
+
+  const tableRow = comparison.tableRows.find((r) => r.status === 'reformatted');
+  assert.ok(tableRow, 'expected the output table row to be relabeled reformatted');
+  assert.equal(tableRow.sourceText, 'Achieve better bag fill by reducing bulk density optimization');
+
+  assert.equal(comparison.stats.missing, 0);
+  assert.equal(comparison.stats.added, 0);
+  assert.equal(comparison.stats.reformatted, 2);
+});
+
+test('a table cell turned into a plain paragraph (infographic-style) is Reformatted', () => {
+  const comparison = compare(
+    [{
+      type: 'tableRow',
+      text: 'Relax substrate specification to competitive standards',
+      cells: ['Relax substrate specification to competitive standards'],
+      tableId: 't1',
+      rowIndex: 0,
+    }],
+    [{ type: 'list', text: 'Relax substrate specification to competitive standards' }]
+  );
+
+  const tableRow = comparison.tableRows.find((r) => r.status === 'reformatted');
+  assert.ok(tableRow);
+  const paraRow = comparison.detailRows.find((r) => r.status === 'reformatted');
+  assert.ok(paraRow);
+  assert.equal(comparison.stats.reformatted, 2);
+});
+
+test('genuinely lost content is NOT reconciled just because something unrelated was also added', () => {
+  // The first paragraph matches exactly (so it doesn't consume the
+  // paragraph-level positional-fallback slot — see the "wholesale
+  // replacement" tests above); the second paragraph is truly dropped, with
+  // its only possible reconciliation partner being an unrelated new table
+  // row elsewhere in the document. Similarity between the two should be far
+  // below the reconcile threshold, so both must stay Missing/Added.
+  const comparison = compare(
+    [
+      { type: 'paragraph', text: 'This will become the surviving reformatted paragraph content here.' },
+      { type: 'paragraph', text: 'This important clause was dropped during redesign and appears nowhere else in the deck at all.' },
+    ],
+    [
+      { type: 'paragraph', text: 'This will become the surviving reformatted paragraph content here.' },
+      {
+        type: 'tableRow',
+        text: 'Totally unrelated new table content about something else entirely',
+        cells: ['Totally unrelated new table content about something else entirely'],
+        tableId: 't1',
+        rowIndex: 0,
+      },
+    ]
+  );
+  const rows = nonMatchRows(comparison);
+  assert.equal(rows.find((r) => r.status === 'reformatted'), undefined);
+  assert.ok(rows.some((r) => r.status === 'missing'));
+  assert.ok(comparison.tableRows.some((r) => r.status === 'added'));
+});
+
+test('very short leftovers (labels/numbers) are never force-reconciled', () => {
+  const comparison = compare(
+    [{ type: 'heading', text: '1' }],
+    [{ type: 'heading', text: '2' }]
+  );
+  const rows = nonMatchRows(comparison);
+  assert.equal(rows.find((r) => r.status === 'reformatted'), undefined);
+});
+
+test('a numeric value change inside a table cell still reports Modified, unaffected by reconciliation', () => {
+  const comparison = compare(
+    [{ type: 'tableRow', text: 'Pakistan | 2.3%', cells: ['Pakistan', '2.3%'], tableId: 't1', rowIndex: 0 }],
+    [{ type: 'tableRow', text: 'Pakistan | 5.7%', cells: ['Pakistan', '5.7%'], tableId: 't1', rowIndex: 0 }]
+  );
+  assert.equal(comparison.tableRows[0].status, 'modified');
+  assert.equal(comparison.stats.reformatted, 0);
+});
+
 test('identical documents produce zero differences', () => {
   const blocks = [
     { type: 'heading', text: 'Title' },

@@ -21,6 +21,8 @@
   --red-bg: rgba(223, 98, 115, 0.16);
   --blue: #AC64C9;
   --blue-bg: rgba(172, 100, 201, 0.16);
+  --teal: #2BB3B3;
+  --teal-bg: rgba(43, 179, 179, 0.16);
   --radius: 14px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.35);
 
@@ -188,6 +190,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .stat-modified .stat-value { color: var(--yellow); }
 .stat-missing .stat-value { color: var(--red); }
 .stat-added .stat-value { color: var(--blue); }
+.stat-reformatted .stat-value { color: var(--teal); }
 
 .preview-count { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
 
@@ -213,6 +216,7 @@ tr.row-match { background: var(--green-bg); }
 tr.row-modified { background: var(--yellow-bg); }
 tr.row-missing { background: var(--red-bg); }
 tr.row-added { background: var(--blue-bg); }
+tr.row-reformatted { background: var(--teal-bg); }
 
 .diff-equal { color: var(--text-muted); }
 .diff-removed, .diff-added {
@@ -255,6 +259,7 @@ tr.row-added { background: var(--blue-bg); }
 .badge-modified { background: var(--yellow-bg); color: var(--yellow); }
 .badge-missing { background: var(--red-bg); color: var(--red); }
 .badge-added { background: var(--blue-bg); color: var(--blue); }
+.badge-reformatted { background: var(--teal-bg); color: var(--teal); }
 
 .footer-note {
   text-align: center;

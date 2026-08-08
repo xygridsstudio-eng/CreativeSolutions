@@ -15,10 +15,12 @@
     const missingContent = [];
     const addedContent = [];
     const modifiedContent = [];
+    const reformattedContent = [];
 
     detailRows.forEach((row) => {
       if (row.status === 'missing') missingContent.push(row);
       if (row.status === 'added') addedContent.push(row);
+      if (row.status === 'reformatted') reformattedContent.push(row);
       if (row.status === 'modified') {
         modifiedContent.push(row);
         if (row.special) {
@@ -34,7 +36,10 @@
     const tableRowsWithComments = tableRows.map((row) => ({
       ...row,
       sentenceNumber: null,
-      comments: row.status === 'missing' ? 'Table row removed'
+      // Reconciliation (comparer.js) already sets a specific comment when it
+      // relabels a row 'reformatted' — keep that instead of overwriting it.
+      comments: row.comments ? row.comments
+        : row.status === 'missing' ? 'Table row removed'
         : row.status === 'added' ? 'Table row added'
         : row.status === 'modified' ? 'Table row modified'
         : '',
@@ -43,6 +48,7 @@
     tableRowsWithComments.forEach((row) => {
       if (row.status === 'missing') missingContent.push(row);
       if (row.status === 'added') addedContent.push(row);
+      if (row.status === 'reformatted') reformattedContent.push(row);
       if (row.status === 'modified') modifiedContent.push(row);
     });
 
@@ -61,6 +67,7 @@
       missingContent,
       addedContent,
       modifiedContent,
+      reformattedContent,
       numberChanges,
       dateChanges,
       duplicates,

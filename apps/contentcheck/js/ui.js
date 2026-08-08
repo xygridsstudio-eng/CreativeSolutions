@@ -163,6 +163,7 @@
       ['Modified', s.modified, 'modified'],
       ['Missing', s.missing, 'missing'],
       ['Added', s.added, 'added'],
+      ['Reformatted', s.reformatted, 'reformatted'],
       ['Match %', `${s.matchPercentage}%`, 'neutral'],
       ['Processing Time', report.meta.processingTime, 'neutral'],
     ];
@@ -176,7 +177,7 @@
     el('downloadBtn').disabled = false;
   }
 
-  const STATUS_LABELS = { match: 'Match', modified: 'Modified', missing: 'Missing', added: 'Added' };
+  const STATUS_LABELS = { match: 'Match', modified: 'Modified', missing: 'Missing', added: 'Added', reformatted: 'Reformatted' };
 
   function hidePreview() {
     el('previewWrap').classList.add('hidden');
@@ -208,7 +209,7 @@
   }
 
   function countsByStatus(rows) {
-    const counts = { match: 0, modified: 0, missing: 0, added: 0 };
+    const counts = { match: 0, modified: 0, missing: 0, added: 0, reformatted: 0 };
     rows.forEach((r) => { if (counts[r.status] != null) counts[r.status] += 1; });
     return counts;
   }
@@ -222,14 +223,17 @@
   }
 
   /**
-   * Source/Output cell HTML for one preview row. A "modified" row shows a
-   * word-level diff (unchanged words muted, changed words highlighted) so
-   * the specific change stands out instead of two full, mostly-identical
-   * sentences sitting side by side. Missing/added rows have no counterpart
-   * to diff against, so they just show the plain (truncated) text.
+   * Source/Output cell HTML for one preview row. A "modified" or
+   * "reformatted" row shows a word-level diff (unchanged words muted,
+   * changed words highlighted) so the specific change stands out instead
+   * of two full, mostly-identical sentences sitting side by side — for
+   * "reformatted" this usually means most/all words show as unchanged,
+   * visually confirming the content survived the format change. Missing/
+   * added rows have no counterpart to diff against, so they just show the
+   * plain (truncated) text.
    */
   function renderRowCells(r) {
-    if (r.status !== 'modified') {
+    if (r.status !== 'modified' && r.status !== 'reformatted') {
       const src = global.CCUtils.escapeHtml((r.sourceText || '').slice(0, 160));
       const out = global.CCUtils.escapeHtml((r.outputText || '').slice(0, 160));
       return [src, out];
@@ -250,7 +254,7 @@
 
     el('previewGroups').innerHTML = groups.map((g) => {
       const counts = countsByStatus(g.rows);
-      const countBadges = ['modified', 'missing', 'added', 'match']
+      const countBadges = ['modified', 'missing', 'added', 'reformatted', 'match']
         .filter((key) => counts[key])
         .map((key) => `<span class="badge badge-${key}">${counts[key]} ${STATUS_LABELS[key]}</span>`)
         .join('');

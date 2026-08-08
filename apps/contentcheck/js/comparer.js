@@ -360,6 +360,130 @@
   }
 
   // ---------------------------------------------------------------------
+  // Reformatted-content reconciliation
+  //
+  // Everything above compares like-for-like: paragraphs against paragraphs,
+  // table cells against table cells, within the same matched section. That
+  // misses the exact scenario a designer runs into constantly — turning a
+  // bullet list into a table, an infographic, or a SmartArt diagram. The
+  // text is untouched, but it moved to a different structural type (and
+  // maybe a different part of the document), so the passes above only ever
+  // see one "missing" bullet and one unrelated "added" table cell.
+  //
+  // This pass runs once, after everything else, over the WHOLE document:
+  // it pools every remaining Missing item and every remaining Added item
+  // (paragraphs, headings, whole table rows, and individual table cells
+  // alike) and looks for near-exact cross-matches between the two pools,
+  // ignoring type and location entirely. A match means the content is
+  // intact — just reshaped — so both sides are relabeled "reformatted"
+  // (showing where the content came from and where it ended up) instead of
+  // being reported as unrelated content loss and unrelated new content.
+  // ---------------------------------------------------------------------
+  const RECONCILE_THRESHOLD = 0.75;
+  const RECONCILE_MIN_LENGTH = 8; // skip trivial short labels/numbers ("1", "Q1") — too easy to false-match
+
+  function reconcileKey(text) {
+    return (text || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  function appendComment(existing, addition) {
+    return existing ? `${existing} | ${addition}` : addition;
+  }
+
+  function reconcileLocationLabel(row, isTable) {
+    const where = row.slide != null ? `Slide ${row.slide}` : (row.page != null ? `Page ${row.page}` : null);
+    const base = row.section || 'Document';
+    const suffix = isTable ? ' (table)' : '';
+    // Untitled slides/pages fall back to "Slide N"/"Page N" as the section
+    // name itself (see parser.js) — don't double it up as "Slide 1 — Slide 1".
+    if (!where || base === where) return `${base}${suffix}`;
+    return `${base} — ${where}${suffix}`;
+  }
+
+  function reconcileReformatted(detailRows, tableRows, stats) {
+    const missingUnits = [];
+    const addedUnits = [];
+
+    function addUnit(pool, text, location, apply) {
+      if (!text || reconcileKey(text).length < RECONCILE_MIN_LENGTH) return;
+      pool.push({ text, location, apply });
+    }
+
+    detailRows.forEach((row) => {
+      if (row.status === 'missing') {
+        addUnit(missingUnits, row.sourceText, reconcileLocationLabel(row, false), (otherText, otherLoc) => {
+          row.status = 'reformatted';
+          row.outputText = otherText;
+          row.comments = appendComment(row.comments, `Reformatted — matching content found in ${otherLoc}`);
+        });
+      } else if (row.status === 'added') {
+        addUnit(addedUnits, row.outputText, reconcileLocationLabel(row, false), (otherText, otherLoc) => {
+          row.status = 'reformatted';
+          row.sourceText = otherText;
+          row.comments = appendComment(row.comments, `Reformatted — matching content found in ${otherLoc}`);
+        });
+      }
+    });
+
+    tableRows.forEach((tRow) => {
+      if (tRow.status === 'missing') {
+        addUnit(missingUnits, tRow.sourceText, reconcileLocationLabel(tRow, true), (otherText, otherLoc) => {
+          tRow.status = 'reformatted';
+          tRow.outputText = otherText;
+          tRow.comments = appendComment(tRow.comments, `Reformatted — matching content found in ${otherLoc}`);
+        });
+      } else if (tRow.status === 'added') {
+        addUnit(addedUnits, tRow.outputText, reconcileLocationLabel(tRow, true), (otherText, otherLoc) => {
+          tRow.status = 'reformatted';
+          tRow.sourceText = otherText;
+          tRow.comments = appendComment(tRow.comments, `Reformatted — matching content found in ${otherLoc}`);
+        });
+      }
+      (tRow.cellDiffs || []).forEach((cell) => {
+        if (cell.status === 'missing') {
+          addUnit(missingUnits, cell.srcText, reconcileLocationLabel(tRow, true), (otherText, otherLoc) => {
+            cell.status = 'reformatted';
+            cell.outText = otherText;
+            cell.note = `Reformatted — matching content found in ${otherLoc}`;
+          });
+        } else if (cell.status === 'added') {
+          addUnit(addedUnits, cell.outText, reconcileLocationLabel(tRow, true), (otherText, otherLoc) => {
+            cell.status = 'reformatted';
+            cell.srcText = otherText;
+            cell.note = `Reformatted — matching content found in ${otherLoc}`;
+          });
+        }
+      });
+    });
+
+    if (!missingUnits.length || !addedUnits.length) return;
+
+    const ops = alignSequences(
+      missingUnits,
+      addedUnits,
+      (u) => reconcileKey(u.text),
+      (a, b) => U.combinedSimilarity(reconcileKey(a.text), reconcileKey(b.text)),
+      RECONCILE_THRESHOLD
+    );
+
+    let reconciledCount = 0;
+    ops.forEach((op) => {
+      if (op.type !== 'match' && op.type !== 'modify') return;
+      const missingUnit = missingUnits[op.srcIndex];
+      const addedUnit = addedUnits[op.outIndex];
+      missingUnit.apply(addedUnit.text, addedUnit.location);
+      addedUnit.apply(missingUnit.text, missingUnit.location);
+      reconciledCount += 1;
+    });
+
+    if (reconciledCount) {
+      stats.missing = Math.max(0, stats.missing - reconciledCount);
+      stats.added = Math.max(0, stats.added - reconciledCount);
+      stats.reformatted += reconciledCount * 2;
+    }
+  }
+
+  // ---------------------------------------------------------------------
   // Top-level document comparison
   // ---------------------------------------------------------------------
   function compareDocuments(srcDoc, outDoc, options) {
@@ -383,6 +507,7 @@
       modified: 0,
       missing: 0,
       added: 0,
+      reformatted: 0,
     };
 
     function pushDetail(status, section, srcPara, outPara, srcSent, outSent, special, comments) {
@@ -508,6 +633,8 @@
         });
       }
     });
+
+    reconcileReformatted(detailRows, tableRows, stats);
 
     const duplicatesSrc = findDuplicates(srcDoc);
     const duplicatesOut = findDuplicates(outDoc);

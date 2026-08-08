@@ -27,6 +27,8 @@
     missingFont: 'FF450D16',  // Grapefruit 600
     added: 'FFF3E6F9',        // Plum 50
     addedFont: 'FF270D2B',    // Plum 600
+    reformatted: 'FFD9F4F4',      // Teal 50 — content preserved, just moved to a different format/location
+    reformattedFont: 'FF0B3D3D',  // Teal 600
   };
 
   function statusFill(status) {
@@ -35,6 +37,7 @@
       case 'modified': return { fill: COLORS.modified, font: COLORS.modifiedFont };
       case 'missing': return { fill: COLORS.missing, font: COLORS.missingFont };
       case 'added': return { fill: COLORS.added, font: COLORS.addedFont };
+      case 'reformatted': return { fill: COLORS.reformatted, font: COLORS.reformattedFont };
       default: return null;
     }
   }
@@ -141,9 +144,10 @@
       ['Modified', s.modified],
       ['Missing', s.missing],
       ['Added', s.added],
+      ['Reformatted', s.reformatted],
       ['Overall Match %', `${s.matchPercentage}%`],
     ];
-    const statusColorKey = { Matched: 'match', Modified: 'modified', Missing: 'missing', Added: 'added' };
+    const statusColorKey = { Matched: 'match', Modified: 'modified', Missing: 'missing', Added: 'added', Reformatted: 'reformatted' };
     statRows.forEach(([label, value]) => {
       const row = sheet.addRow([label, value]);
       const style = statusFill(statusColorKey[label]);
@@ -158,7 +162,7 @@
     sheet.addRow([]);
     const legendHeader = sheet.addRow(['Color Legend', '']);
     legendHeader.getCell(1).font = { bold: true };
-    [['Match', 'match'], ['Modified', 'modified'], ['Missing', 'missing'], ['Added', 'added']].forEach(([label, key]) => {
+    [['Match', 'match'], ['Modified', 'modified'], ['Missing', 'missing'], ['Added', 'added'], ['Reformatted', 'reformatted']].forEach(([label, key]) => {
       const row = sheet.addRow([label, '']);
       const style = statusFill(key);
       row.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: style.fill } };
@@ -173,7 +177,7 @@
     let outputText = r.outputText || '';
     let comments = r.comments || '';
 
-    if ((r.status || '').toLowerCase() === 'modified') {
+    if (['modified', 'reformatted'].includes((r.status || '').toLowerCase())) {
       const trimmed = U.trimAroundChange(sourceText, outputText, { contextWords: 4, lengthThreshold: 20 });
       sourceText = trimmed.source;
       outputText = trimmed.output;
@@ -222,6 +226,16 @@
       workbook, 'Modified Content', DETAIL_COLUMNS,
       report.modifiedContent.map(detailToRow)
     ).eachRow((row, i) => { if (i > 1) row.eachCell((c) => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.modified } }; c.font = { color: { argb: COLORS.modifiedFont } }; }); });
+
+    // Content that survived a format change (bullet -> table, table ->
+    // diagram, etc.) rather than being genuinely lost — see comparer.js's
+    // reconcileReformatted(). Its own sheet so a designer can quickly
+    // confirm "this is fine, just reshaped" without it being buried among
+    // real Missing/Added rows.
+    addSheetFromRows(
+      workbook, 'Reformatted Content', DETAIL_COLUMNS,
+      (report.reformattedContent || []).map(detailToRow)
+    ).eachRow((row, i) => { if (i > 1) row.eachCell((c) => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.reformatted } }; c.font = { color: { argb: COLORS.reformattedFont } }; }); });
 
     const detailSheet = addSheetFromRows(
       workbook, 'Detailed Comparison', DETAIL_COLUMNS,
